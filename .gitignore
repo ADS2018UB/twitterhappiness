@@ -1,3 +1,7 @@
+credentials.txt
+data/source/*
+.idea/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
