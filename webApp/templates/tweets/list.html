@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% from 'tweets/common.html' import detail %}
+
+{% block title %}Tweets{% endblock title %}
+
+{% block extra_head %}
+<style>
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+th {
+  background-color: rgb(29, 161, 242);
+  color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+</style>
+{% endblock extra_head %}
+
+{% block main %}
+<div class="row">
+  <div style="padding-top: 20px; padding-bottom: 20px;"></div>
+  <table>
+    <tr>
+      <th>Tweet</th>
+      <th>Sentiment</th>
+      <th>Emoji</th>
+      <th>Icon</th>
+    </tr>
+    {% for tweet in tweets %}
+      {{ detail(tweet, show_sentiment_icon=true) }}
+    {% endfor %}
+  </table>
+</div>
+{% endblock main %}
