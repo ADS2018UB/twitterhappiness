@@ -187,14 +187,14 @@ def tweets_list():
 @flask_app.route('/tweets-map/')
 def tweets_map():
     """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[:20]
+    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[30:50]
     return render_template('tweets/list.html', tweets=tweets)
 
 
 @flask_app.route('/about-us/')
 def about_us():
     """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[:10]
+    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[50:60]
     return render_template('tweets/list.html', tweets=tweets)
 
 
