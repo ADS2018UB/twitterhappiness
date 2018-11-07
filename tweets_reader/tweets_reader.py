@@ -3,7 +3,7 @@ from tweepy import Stream, StreamListener,OAuthHandler
 import json
 
 
-TWITTER_CREDENTIALS_FILE = './credentials.txt'
+TWITTER_CREDENTIALS_FILE = '../credentials/twitter_credentials.txt'
 
 def get_tweets(location, max_tweets):
 
