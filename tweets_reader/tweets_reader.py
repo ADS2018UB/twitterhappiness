@@ -3,6 +3,8 @@ from tweepy import Stream, StreamListener,OAuthHandler
 import json
 
 
+TWITTER_CREDENTIALS_FILE = './credentials.txt'
+
 def get_tweets(location, max_tweets):
 
     loc = location    
@@ -38,21 +40,9 @@ def get_tweets(location, max_tweets):
 
     
 #1.1
-    with open('consumer_key.txt', 'r') as f:
-        consumer_key =  f.read()
-    f.closed
 
-    with open('consumer_secret.txt', 'r') as f:
-        consumer_secret = f.read()
-    f.closed
-
-    with open('access_key.txt', 'r') as f:
-        access_key = f.read()
-    f.closed
-
-    with open('access_secret.txt', 'r') as f:
-        access_secret = f.read()
-    f.closed
+    with open(TWITTER_CREDENTIALS_FILE, 'r', encoding='utf-8') as f:
+        [access_key, access_secret, consumer_key, consumer_secret] = f.read().splitlines()
 
     auth = OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_key, access_secret)
