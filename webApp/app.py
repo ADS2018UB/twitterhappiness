@@ -30,7 +30,6 @@ import pandas as pd
 
 from data import load_data
 
-
 #dash_app = dash.Dash(__name__)
 #flask_app = dash_app.server
 
@@ -39,7 +38,7 @@ dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards'
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
 
-mlab_credentials_file = "../credentials.txt"
+mlab_credentials_file = "../credentials_web.txt"
 TWEETS_DB_COLLECTION = "twitter_happiness_test"
 DB_UP = False
 PROD_ENV = True
@@ -184,8 +183,8 @@ def tweets_list():
     return render_template('tweets/list.html', tweets=tweets)
 
 
-@flask_app.route('/tweets-map/')
-def tweets_map():
+@flask_app.route('/tweets-map-old/')
+def tweets_map_old():
     """Provide HTML listing of all Tweets."""
     tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[30:50]
     return render_template('tweets/list.html', tweets=tweets)
@@ -298,6 +297,124 @@ request.is_xhr: {request.is_xhr}
 {request.headers}
     """.format(request=request).strip()
     return request_detail
+
+
+@flask_app.route('/tweets-map/')
+def tweets_map():
+    global dash_app
+
+    available_indicators = data['NA_ITEM'].sort_values(ascending=[True]).unique()
+    countries_flg = data["Country"].sort_values(ascending=[True]).unique()
+    years = data['TIME']
+
+    dash_app.layout = html.Div([
+
+        html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+        html.H1(children='Eurostat Dashboard', style={'margin': 'auto'}),
+
+        html.Div(style={'padding-top': '10px', 'padding-bottom': '15px'}),
+
+        html.Div([
+
+            html.Div([
+
+                html.Div([
+                    dcc.Dropdown(
+                        id='xaxis-column-1',
+                        options=[{'label': i, 'value': i} for i in available_indicators],
+                        value=available_indicators[0]
+                    ),
+                    html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
+                    dcc.RadioItems(
+                        id='xaxis-type-1',
+                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                        value='Linear',
+                        labelStyle={'display': 'inline-block'}
+                    )
+                ], style={'width': '48%', 'display': 'inline-block'}),
+
+                html.Div([
+                    dcc.Dropdown(
+                        id='yaxis-column-1',
+                        options=[{'label': i, 'value': i} for i in available_indicators],
+                        value=available_indicators[1]
+                    ),
+                    html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
+                    dcc.RadioItems(
+                        id='yaxis-type-1',
+                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                        value='Linear',
+                        labelStyle={'display': 'inline-block'}
+                    )
+                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
+
+            ]),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '20px'}),
+
+            dcc.Slider(
+                id='year-slider-1',
+                min=years.min(),
+                max=years.max(),
+                value=years.max(),
+                step=None,
+                marks={str(year): str(year) for year in years.unique()}
+            ),
+
+            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+            dcc.Graph(id='indicator-graphic-1')
+
+        ]),
+
+        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+        html.Hr(),
+
+        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+        html.Div([
+
+            html.Div([
+
+                dcc.RadioItems(
+                    id='countries-flg',
+                    options=[{'label': i, 'value': i} for i in countries_flg],
+                    value=countries_flg[0]
+                ),
+
+                html.Div([
+                    dcc.Dropdown(
+                        id='countries-2',
+                        multi=True
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block'}),
+
+                html.Div([
+                    dcc.Dropdown(
+                        id='yaxis-column-2',
+                        options=[{'label': i, 'value': i} for i in available_indicators],
+                        value="Exports of goods"  # available_indicators[0]
+                    ),
+                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
+
+            ]),
+
+            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+            dcc.Graph(id='indicator-graphic-2')
+
+        ]),
+
+        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'})
+
+
+    ],
+        style={'width': '80%', 'margin': 'auto'}
+    )
+
+    return dash_app.index()
 
 
 data = load_data()
