@@ -25,6 +25,7 @@ import os
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
 import pandas as pd
 
@@ -37,6 +38,9 @@ flask_app = Flask(__name__)
 dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards')
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
+dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/bootswatch/2.3.2/united/bootstrap.min.css"})
+dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
+
 
 
 mlab_credentials_file = "../credentials/mlab_credentials_web.txt"
@@ -310,112 +314,197 @@ def tweets_map():
 
     dash_app.layout = html.Div([
 
-        html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
-
-        html.H1(children='Eurostat Dashboard', style={'margin': 'auto'}),
-
-        html.Div(style={'padding-top': '10px', 'padding-bottom': '15px'}),
-
         html.Div([
-
-            html.Div([
-
-                html.Div([
-                    dcc.Dropdown(
-                        id='xaxis-column-1',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value=available_indicators[0]
-                    ),
-                    html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
-                    dcc.RadioItems(
-                        id='xaxis-type-1',
-                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                        value='Linear',
-                        labelStyle={'display': 'inline-block'}
-                    )
-                ], style={'width': '48%', 'display': 'inline-block'}),
-
-                html.Div([
-                    dcc.Dropdown(
-                        id='yaxis-column-1',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value=available_indicators[1]
-                    ),
-                    html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
-                    dcc.RadioItems(
-                        id='yaxis-type-1',
-                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                        value='Linear',
-                        labelStyle={'display': 'inline-block'}
-                    )
-                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-
-            ]),
-
-            html.Div(style={'padding-top': '10px', 'padding-bottom': '20px'}),
-
-            dcc.Slider(
-                id='year-slider-1',
-                min=years.min(),
-                max=years.max(),
-                value=years.max(),
-                step=None,
-                marks={str(year): str(year) for year in years.unique()}
-            ),
-
-            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-            dcc.Graph(id='indicator-graphic-1')
-
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                <div class="navbar navbar-static-top" >
+                <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                    <div class="container">
+                        <a href="{{ url_for('tweets_list') }}" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                        <ul class="nav">
+                            <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
+                            <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
+                            <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
+                        </ul>
+                        <ul class="nav pull-right">
+                            <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            '''),
         ]),
 
-        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-        html.Hr(),
-
-        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
         html.Div([
+        #html.Div([
+        #    html.Div(className="navbar-inner", style={"background-image": "none !important", "background-color": "rgb(29, 161, 242) !important", "border": "none !important"})
+        #], className ="navbar navbar-static-top"),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            dcc.Graph(id='map-1'),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
+
+            html.H1(children='Eurostat Dashboard', style={'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '15px'}),
 
             html.Div([
 
-                dcc.RadioItems(
-                    id='countries-flg',
-                    options=[{'label': i, 'value': i} for i in countries_flg],
-                    value=countries_flg[0]
+                html.Div([
+
+                    html.Div([
+                        dcc.Dropdown(
+                            id='xaxis-column-1',
+                            options=[{'label': i, 'value': i} for i in available_indicators],
+                            value=available_indicators[0]
+                        ),
+                        html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
+                        dcc.RadioItems(
+                            id='xaxis-type-1',
+                            options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                            value='Linear',
+                            labelStyle={'display': 'inline-block'}
+                        )
+                    ], style={'width': '48%', 'display': 'inline-block'}),
+
+                    html.Div([
+                        dcc.Dropdown(
+                            id='yaxis-column-1',
+                            options=[{'label': i, 'value': i} for i in available_indicators],
+                            value=available_indicators[1]
+                        ),
+                        html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
+                        dcc.RadioItems(
+                            id='yaxis-type-1',
+                            options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                            value='Linear',
+                            labelStyle={'display': 'inline-block'}
+                        )
+                    ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
+
+                ]),
+
+                html.Div(style={'padding-top': '10px', 'padding-bottom': '20px'}),
+
+                dcc.Slider(
+                    id='year-slider-1',
+                    min=years.min(),
+                    max=years.max(),
+                    value=years.max(),
+                    step=None,
+                    marks={str(year): str(year) for year in years.unique()}
                 ),
 
-                html.Div([
-                    dcc.Dropdown(
-                        id='countries-2',
-                        multi=True
-                    ),
-                ], style={'width': '48%', 'display': 'inline-block'}),
+                html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
 
-                html.Div([
-                    dcc.Dropdown(
-                        id='yaxis-column-2',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value="Exports of goods"  # available_indicators[0]
-                    ),
-                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
+                dcc.Graph(id='indicator-graphic-1')
 
             ]),
 
             html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
 
-            dcc.Graph(id='indicator-graphic-2')
+            html.Hr(),
 
-        ]),
+            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
 
-        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'})
+            html.Div([
+
+                html.Div([
+
+                    dcc.RadioItems(
+                        id='countries-flg',
+                        options=[{'label': i, 'value': i} for i in countries_flg],
+                        value=countries_flg[0]
+                    ),
+
+                    html.Div([
+                        dcc.Dropdown(
+                            id='countries-2',
+                            multi=True
+                        ),
+                    ], style={'width': '48%', 'display': 'inline-block'}),
+
+                    html.Div([
+                        dcc.Dropdown(
+                            id='yaxis-column-2',
+                            options=[{'label': i, 'value': i} for i in available_indicators],
+                            value="Exports of goods"  # available_indicators[0]
+                        ),
+                    ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
+
+                ]),
+
+                html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+                dcc.Graph(id='indicator-graphic-2')
+
+            ]),
+
+            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'})
 
 
-    ],
+        ],
         style={'width': '80%', 'margin': 'auto'}
-    )
+        )
+    ])
 
     return dash_app.index()
+
+
+@dash_app.callback(
+    dash.dependencies.Output('map-1', 'figure'),
+    [
+        dash.dependencies.Input('xaxis-column-1', 'value'),
+        dash.dependencies.Input('yaxis-column-1', 'value'),
+        dash.dependencies.Input('xaxis-type-1', 'value'),
+        dash.dependencies.Input('yaxis-type-1', 'value'),
+        dash.dependencies.Input('year-slider-1', 'value')
+    ]
+)
+def map_1(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_value):
+    mapbox_access_token = 'pk.eyJ1IjoiamFja2x1byIsImEiOiJjajNlcnh3MzEwMHZtMzNueGw3NWw5ZXF5In0.fk8k06T96Ml9CLGgKmk81w'
+
+    layout = dict(
+        autosize=True,
+        height=500,
+        font=dict(color='#CCCCCC'),
+        titlefont=dict(color='#CCCCCC', size='14'),
+        margin=dict(
+            l=35,
+            r=35,
+            b=35,
+            t=45
+        ),
+        hovermode="closest",
+        plot_bgcolor="#191A1A",
+        paper_bgcolor="#020202",
+        legend=dict(font=dict(size=10), orientation='h'),
+        title='Satellite Overview',
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            style="dark",
+            center=dict(
+                lon=41.408366,
+                lat=2.137533,
+                zoom = 7
+            )
+        )
+    )
+    trace = dict(
+        type='scattermapbox',
+        lon=[41.408366, 41.407288],
+        lat=[2.137533, 2.138364],
+        text='Well_Name',
+        name='well_type',
+        marker=dict(
+            size=4,
+            opacity=0.8,
+            color='blue'
+        )
+    )
+    map1 = dict(data=trace, layout=layout)
+    return map1
 
 
 data = load_data()
