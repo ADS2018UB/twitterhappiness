@@ -43,8 +43,9 @@ dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/twitte
 
 
 
-mlab_credentials_file = "../credentials/mlab_credentials_web.txt"
-TWEETS_DB_COLLECTION = "twitter_happiness_test"
+mlab_credentials_file = "../credentials/mlab_credentials.txt"
+DB_TWEETS = "twitter_happiness_test"
+DB_LOCATIONS = "twitter_happiness_locations"
 DB_UP = False
 PROD_ENV = True
 PROD_ENV = False
@@ -178,27 +179,33 @@ def logout():
 @flask_app.route('/')
 def index():
     # return render_template('index.html')
-    return redirect(url_for('tweets_list'))
+    return redirect(url_for('home_page'))
+
+
+@flask_app.route('/home/')
+def home_page():
+    locations = [location["name"] for location in MONGO.db[DB_LOCATIONS].find()]
+    return render_template('home/home_page.html', locations=locations)
 
 
 @flask_app.route('/tweets-list/')
 def tweets_list():
     """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[:30]
+    tweets = MONGO.db[DB_TWEETS].find()[:30]
     return render_template('tweets/list.html', tweets=tweets)
 
 
 @flask_app.route('/tweets-map-old/')
 def tweets_map_old():
     """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[30:50]
+    tweets = MONGO.db[DB_TWEETS].find()[30:50]
     return render_template('tweets/list.html', tweets=tweets)
 
 
 @flask_app.route('/about-us/')
 def about_us():
     """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[TWEETS_DB_COLLECTION].find()[50:60]
+    tweets = MONGO.db[DB_TWEETS].find()[50:60]
     return render_template('tweets/list.html', tweets=tweets)
 
 
@@ -319,11 +326,11 @@ def tweets_map():
                 <div class="navbar navbar-static-top" >
                 <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
                     <div class="container">
-                        <a href="{{ url_for('tweets_list') }}" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                        <a href="/tweets-list/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
                         <ul class="nav">
-                            <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
-                            <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
-                            <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
+                            <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
+                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
                         </ul>
                         <ul class="nav pull-right">
                             <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
