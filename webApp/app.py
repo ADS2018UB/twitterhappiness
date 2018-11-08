@@ -38,7 +38,8 @@ dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards'
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
 
-mlab_credentials_file = "../credentials_web.txt"
+
+mlab_credentials_file = "../credentials/mlab_credentials_web.txt"
 TWEETS_DB_COLLECTION = "twitter_happiness_test"
 DB_UP = False
 PROD_ENV = True
