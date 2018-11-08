@@ -34,7 +34,7 @@
                     {% if current_user.is_authenticated %}
                     <ul class="nav" style="text-shadow: none;">
                         <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
-                        <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
+                        <li><a href="{{ url_for('tweets_map_old') }}" style="text-shadow: none;">Tweets Map</a></li>
                         <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
                     </ul>
                     <ul class="nav pull-right">
@@ -48,7 +48,7 @@
                     {% else %}
                     <ul class="nav">
                         <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
-                        <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
+                        <li><a href="{{ url_for('tweets_map_old') }}" style="text-shadow: none;">Tweets Map</a></li>
                         <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
                     </ul>
                     <ul class="nav pull-right">
