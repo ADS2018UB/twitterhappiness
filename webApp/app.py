@@ -317,12 +317,16 @@ request.is_xhr: {request.is_xhr}
 def tweets_map():
     global dash_app
 
-    location = request.args['location']
-    print(location)
+    locations = [loc for loc in MONGO.db[DB_LOCATIONS].find()]
 
-    available_indicators = data['NA_ITEM'].sort_values(ascending=[True]).unique()
-    countries_flg = data["Country"].sort_values(ascending=[True]).unique()
-    years = data['TIME']
+    location = None
+    try:
+        location = request.args['location']
+    except:
+        pass
+    if location == None:
+        location = locations[0]["name"]
+    print(location)
 
     dash_app.layout = html.Div([
 
@@ -347,113 +351,22 @@ def tweets_map():
         ]),
 
         html.Div([
-        #html.Div([
-        #    html.Div(className="navbar-inner", style={"background-image": "none !important", "background-color": "rgb(29, 161, 242) !important", "border": "none !important"})
-        #], className ="navbar navbar-static-top"),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
-            dcc.Graph(id='map-1'),
+            html.Div([
+            dcc.Dropdown(
+                id='locations-filter',
+                options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
+                value=location
+            )], style={'width': '50%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            dcc.Graph(id='tweets-map'),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
 
-            html.H1(children='Eurostat Dashboard', style={'margin': 'auto'}),
-
-            html.Div(style={'padding-top': '10px', 'padding-bottom': '15px'}),
-
-            html.Div([
-
-                html.Div([
-
-                    html.Div([
-                        dcc.Dropdown(
-                            id='xaxis-column-1',
-                            options=[{'label': i, 'value': i} for i in available_indicators],
-                            value=available_indicators[0]
-                        ),
-                        html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
-                        dcc.RadioItems(
-                            id='xaxis-type-1',
-                            options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                            value='Linear',
-                            labelStyle={'display': 'inline-block'}
-                        )
-                    ], style={'width': '48%', 'display': 'inline-block'}),
-
-                    html.Div([
-                        dcc.Dropdown(
-                            id='yaxis-column-1',
-                            options=[{'label': i, 'value': i} for i in available_indicators],
-                            value=available_indicators[1]
-                        ),
-                        html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
-                        dcc.RadioItems(
-                            id='yaxis-type-1',
-                            options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                            value='Linear',
-                            labelStyle={'display': 'inline-block'}
-                        )
-                    ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-
-                ]),
-
-                html.Div(style={'padding-top': '10px', 'padding-bottom': '20px'}),
-
-                dcc.Slider(
-                    id='year-slider-1',
-                    min=years.min(),
-                    max=years.max(),
-                    value=years.max(),
-                    step=None,
-                    marks={str(year): str(year) for year in years.unique()}
-                ),
-
-                html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-                dcc.Graph(id='indicator-graphic-1')
-
-            ]),
-
-            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-            html.Hr(),
-
-            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-            html.Div([
-
-                html.Div([
-
-                    dcc.RadioItems(
-                        id='countries-flg',
-                        options=[{'label': i, 'value': i} for i in countries_flg],
-                        value=countries_flg[0]
-                    ),
-
-                    html.Div([
-                        dcc.Dropdown(
-                            id='countries-2',
-                            multi=True
-                        ),
-                    ], style={'width': '48%', 'display': 'inline-block'}),
-
-                    html.Div([
-                        dcc.Dropdown(
-                            id='yaxis-column-2',
-                            options=[{'label': i, 'value': i} for i in available_indicators],
-                            value="Exports of goods"  # available_indicators[0]
-                        ),
-                    ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-
-                ]),
-
-                html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-                dcc.Graph(id='indicator-graphic-2')
-
-            ]),
-
-            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'})
 
 
         ],
@@ -465,20 +378,17 @@ def tweets_map():
 
 
 @dash_app.callback(
-    dash.dependencies.Output('map-1', 'figure'),
+    dash.dependencies.Output('tweets-map', 'figure'),
     [
-        dash.dependencies.Input('xaxis-column-1', 'value'),
-        dash.dependencies.Input('yaxis-column-1', 'value'),
-        dash.dependencies.Input('xaxis-type-1', 'value'),
-        dash.dependencies.Input('yaxis-type-1', 'value'),
-        dash.dependencies.Input('year-slider-1', 'value')
+        dash.dependencies.Input('locations-filter', 'value')
     ]
 )
-def map_1(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_value):
+def update_tweets_map(location_filter):
+
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
 
-    location = MONGO.db[DB_LOCATIONS].find()[0]
-    print(location)
+    location = MONGO.db[DB_LOCATIONS].find({"name":location_filter})[0]
+    #print(location)
 
     location_query = {
         "lat": {
