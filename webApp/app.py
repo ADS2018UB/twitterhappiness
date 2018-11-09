@@ -470,11 +470,70 @@ def tweets_map():
     ]
 )
 def map_1(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_value):
-    mapbox_access_token = 'pk.eyJ1IjoiamFja2x1byIsImEiOiJjajNlcnh3MzEwMHZtMzNueGw3NWw5ZXF5In0.fk8k06T96Ml9CLGgKmk81w'
+    mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
 
-    layout = dict(
+    location = MONGO.db[DB_LOCATIONS].find()[0]
+    print(location)
+
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+
+    lats = []
+    lons = []
+    texts = []
+    colors = []
+    for tweet in tweets:
+        lats.append(tweet["lat"])
+        lons.append(tweet["lon"])
+        texts.append(tweet["text"])
+        sentiment = tweet["sentiment"]
+        colors.append("red" if sentiment==-1 else "yellow" if sentiment==0 else "green" if sentiment==1 else "black")
+
+    print(len(lats), "tweets loaded")
+
+    data = [
+        go.Scattermapbox(
+            lat=lats,
+            lon=lons,
+            mode='markers',
+            marker=dict(
+                size=14,
+                color=colors,
+            ),
+            text=texts
+        )
+    ]
+
+    layout = go.Layout(
         autosize=True,
-        height=500,
+        height=800,
+        hovermode='closest',
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            center=dict(
+                lat=(location["lat_min"]+location["lat_max"])/2,
+                lon=(location["lon_min"]+location["lon_max"])/2
+            ),
+            pitch=0,
+            zoom=10
+        ),
+    )
+
+    map1 = dict(data=data, layout=layout)
+
+    '''layout = dict(
+        autosize=True,
+        
         font=dict(color='#CCCCCC'),
         titlefont=dict(color='#CCCCCC', size='14'),
         margin=dict(
@@ -510,7 +569,8 @@ def map_1(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_val
             color='blue'
         )
     )
-    map1 = dict(data=trace, layout=layout)
+    map1 = dict(data=trace, layout=layout)'''
+
     return map1
 
 
