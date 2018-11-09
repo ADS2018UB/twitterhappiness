@@ -99,6 +99,8 @@ login_manager = LoginManager()
 login_manager.setup_app(flask_app)
 login_manager.login_view = 'login'
 
+filtered_location = None
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -315,6 +317,9 @@ request.is_xhr: {request.is_xhr}
 def tweets_map():
     global dash_app
 
+    location = request.args['location']
+    print(location)
+
     available_indicators = data['NA_ITEM'].sort_values(ascending=[True]).unique()
     countries_flg = data["Country"].sort_values(ascending=[True]).unique()
     years = data['TIME']
@@ -326,7 +331,7 @@ def tweets_map():
                 <div class="navbar navbar-static-top" >
                 <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
                     <div class="container">
-                        <a href="/tweets-list/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                        <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
                         <ul class="nav">
                             <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
                             <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>

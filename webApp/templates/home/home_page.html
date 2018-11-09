@@ -20,9 +20,9 @@
   </div-->
 
   <div align="center" >
-    <form autocomplete="off" action="/action_page.php">
+    <form autocomplete="off" action="/tweets-map/">
     <div class="autocomplete" style="width:50%;">
-      <input id="myInput" type="text" name="myCountry" placeholder="Area" style="padding: 20px; margin-bottom: 0px !important;">
+      <input id="myInput" type="text" name="location" placeholder="Location" style="padding: 20px; margin-bottom: 0px !important;">
     </div>
     <input type="submit">
   </form>
@@ -129,14 +129,14 @@
   }
 
   /*An array containing all the country names in the world:*/
-  var areas = [
+  var locations = [
     {% for location in locations %}
       "{{ location }}",
     {% endfor %}
   ]
 
   /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
-  autocomplete(document.getElementById("myInput"), areas);
+  autocomplete(document.getElementById("myInput"), locations);
   </script>
 
 {% endblock main %}
