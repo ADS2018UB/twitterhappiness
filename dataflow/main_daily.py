@@ -38,4 +38,3 @@ if __name__ == '__main__':
         data_load.load(data_processed)
         print("Completed")
         print()
-
