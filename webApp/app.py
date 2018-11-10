@@ -424,7 +424,8 @@ def update_tweets_map(location_filter):
                 size=14,
                 color=colors,
             ),
-            text=texts
+            text=texts,
+            hoverinfo='text'
         )
     ]
 
