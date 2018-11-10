@@ -4,8 +4,8 @@
 
 
 import db_connection
-import data_collection
-import data_analysis
+import data_extraction
+import data_transformation
 import data_load
 
 
@@ -22,10 +22,10 @@ if __name__ == '__main__':
         print("Processing data for ", location["name"])
 
         # extraction: download tweets from Twitter API
-        data = data_collection.collect(location)
+        data = data_extraction.collect(location)
 
         # transformation: process/analize downloaded tweets
-        data_processed = data_analysis.analize(data)
+        data_processed = data_transformation.analize(data)
 
         # load: load processed tweets into the DB
         data_load.load(data_processed)
