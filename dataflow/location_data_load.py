@@ -1,37 +1,60 @@
 
-import pymongo
+# load into the DB the list of locations to consider in the app
 
-
-def connect(credentials, collection_name):
-    # connect to mLab DB
-    try:
-        with open(credentials, 'r', encoding='utf-8') as f:
-            [name, password, url, dbname] = f.read().splitlines()
-            db_conn = pymongo.MongoClient("mongodb://{}:{}@{}/{}".format(name, password, url, dbname))
-            print ("DB connected successfully!!!")
-    except pymongo.errors.ConnectionFailure as e:
-        print ("Could not connect to DB: %s" % e)
-
-    db = db_conn[dbname]
-    collection = db[collection_name]
-
-    return collection
+from db_connection import connect
 
 
 # define list of locations to be considered
+# https://boundingbox.klokantech.com
 locations = [
-    {
-        "name": "Barcelona",
-        "box": [2.03,41.2845,2.3184,41.4958]
-    },
-    {
-        "name": "Madrid",
-        "box": [-3.887581,40.328514,-3.516543,40.518785]
-    },
     {
         "name": "New York",
         "box": [-74.5236,40.4938,-73.4606,40.9642]
     },
+    {
+        "name": "Washington",
+        "box": [-77.2308,38.7807,-76.8609,39.0545]
+    },
+    {
+        "name": "Los Angeles",
+        "box": [-118.9517,33.5604,-116.8706,34.5165]
+    },
+    {
+        "name": "Chicago",
+        "box": [-88.0823,41.5492,-87.2591,42.4069]
+    },
+    {
+        "name": "Houston",
+        "box": [-95.6408,29.5606,-95.0819,29.9616]
+    },
+    {
+        "name": "Boston",
+        "box": [-71.166074,42.29945,-70.948637,42.445808]
+    },
+    {
+        "name": "Sydney",
+        "box": [150.9334,-34.0594,151.4074,-33.5574]
+    },
+    {
+        "name": "Ottawa",
+        "box": [-76.009138,45.265278,-75.349687,45.584893]
+    },
+    {
+        "name": "Toronto",
+        "box": [-79.7194,43.5093,-79.0599,43.8387]
+    },
+    {
+        "name": "Montreal",
+        "box": [-73.9651,45.392,-73.3057,45.7109]
+    },
+    #{
+    #    "name": "Barcelona",
+    #    "box": [2.03,41.2845,2.3184,41.4958]
+    #},
+    #{
+    #    "name": "Madrid",
+    #    "box": [-3.887581,40.328514,-3.516543,40.518785]
+    #},
 ]
 
 
