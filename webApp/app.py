@@ -186,7 +186,7 @@ def index():
 
 @flask_app.route('/home/')
 def home_page():
-    locations = [location["name"] for location in MONGO.db[DB_LOCATIONS].find()]
+    locations = [location["name"] for location in MONGO.db[DB_LOCATIONS].find().sort("name")]
     return render_template('home/home_page.html', locations=locations)
 
 
@@ -317,7 +317,7 @@ request.is_xhr: {request.is_xhr}
 def tweets_map():
     global dash_app
 
-    locations = [loc for loc in MONGO.db[DB_LOCATIONS].find()]
+    locations = [loc for loc in MONGO.db[DB_LOCATIONS].find().sort("name")]
 
     location = None
     try:
