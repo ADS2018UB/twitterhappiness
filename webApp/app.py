@@ -421,6 +421,7 @@ def update_tweets_map(location_filter):
             lon=lons,
             mode='markers',
             marker=dict(
+                #symbol="square",
                 size=14,
                 color=colors,
             ),
