@@ -4,6 +4,11 @@
 # output: list of tweets
 
 
-def collect(location):
-    print("Collecting data for", location["name"])
-    return "some data"
+class DataExtraction:
+    def __init__(self, location):
+        self.location = location
+        pass
+
+    def collect(self, location):
+        print("Collecting data for", location["name"])
+        return "some data"
