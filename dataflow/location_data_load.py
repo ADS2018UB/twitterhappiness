@@ -1,6 +1,7 @@
 
 # load into the DB the list of locations to consider in the app
 
+import geopy.distance
 from db_connection import connect
 
 
@@ -47,10 +48,10 @@ locations = [
         "name": "Montreal",
         "box": [-73.9651,45.392,-73.3057,45.7109]
     },
-    #{
-    #    "name": "Barcelona",
-    #    "box": [2.03,41.2845,2.3184,41.4958]
-    #},
+    {
+        "name": "Barcelona",
+        "box": [2.03,41.2845,2.3184,41.4958]
+    },
     #{
     #    "name": "Madrid",
     #    "box": [-3.887581,40.328514,-3.516543,40.518785]
@@ -80,6 +81,9 @@ for location in locations:
     location["lat_max"] = location["box"][3]
     location["lon_min"] = location["box"][0]
     location["lon_max"] = location["box"][2]
+    location["lat_center"] = (location["lat_min"] + location["lat_max"]) / 2
+    location["lon_center"] = (location["lon_min"] + location["lon_max"]) / 2
+    location["radius"] = geopy.distance.vincenty((location["lat_center"], location["lon_center"]), (location["lat_min"], location["lon_min"])).m
     db_locations.replace_one({"name":location["name"]}, location, upsert = True)
 
 
