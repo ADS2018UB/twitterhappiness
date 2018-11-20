@@ -1,4 +1,3 @@
-
 from flask import Flask
 from flask import render_template
 from flask import Flask, make_response, request
@@ -31,17 +30,16 @@ import pandas as pd
 
 from data import load_data
 
-#dash_app = dash.Dash(__name__)
-#flask_app = dash_app.server
+# dash_app = dash.Dash(__name__)
+# flask_app = dash_app.server
 
 flask_app = Flask(__name__)
 dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards')
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
 dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/bootswatch/2.3.2/united/bootstrap.min.css"})
-dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
-
-
+dash_app.css.append_css(
+    {'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
 
 mlab_credentials_file = "../credentials/mlab_credentials.txt"
 DB_TWEETS = "twitter_happiness_test"
@@ -90,9 +88,8 @@ def db_connect():
 
 db_connect()
 
-flask_app.config['SECRET_KEY'] = 'enydM2ANhdcoKwdVa0jWvEsbPFuQpMjf' # Create your own.
+flask_app.config['SECRET_KEY'] = 'enydM2ANhdcoKwdVa0jWvEsbPFuQpMjf'  # Create your own.
 flask_app.config['SESSION_PROTECTION'] = 'strong'
-
 
 # Use Flask-Login to track current user in Flask's session.
 login_manager = LoginManager()
@@ -169,7 +166,7 @@ def login():
             return redirect(url_for('products_list'))
         else:
             error = 'Incorrect username or password.'
-    return render_template('user/login.html',form=form, error=error)
+    return render_template('user/login.html', form=form, error=error)
 
 
 @flask_app.route('/logout/')
@@ -239,12 +236,13 @@ def product_detail(product_id):
     # return 'Detail of product     #{}.'.format(product_id)
     """Provide HTML page with a given product."""
     # Query: get Product object by ID.
-    product = MONGO.db.products.find_one({"_id": ObjectId(product_id) })
+    product = MONGO.db.products.find_one({"_id": ObjectId(product_id)})
     print(product)
     if product is None:
         # Abort with Not Found.
         abort(404)
-    return render_template('product/detail.html', product=product) # this is the controler, linking view (template) and model (data, product)
+    return render_template('product/detail.html',
+                           product=product)  # this is the controler, linking view (template) and model (data, product)
 
 
 @flask_app.route('/products/<product_id>/edit/', methods=['GET', 'POST'])
@@ -255,7 +253,7 @@ def product_edit(product_id):
     product = MONGO.db.products.find_one({"_id": ObjectId(product_id)})
     form = ProductForm(request.form)
     if request.method == 'POST' and form.validate():
-        MONGO.db.products.replace_one({'_id':ObjectId(product_id)},form.data)
+        MONGO.db.products.replace_one({'_id': ObjectId(product_id)}, form.data)
         # Success. Send user back to full product list.
         return redirect(url_for('products_list'))
     # Either first load or validation error at this point.
@@ -267,7 +265,7 @@ def product_edit(product_id):
 def product_delete(product_id):
     # raise NotImplementedError('DELETE')
     """Delete record using HTTP DELETE, respond with JSON."""
-    result = MONGO.db.products.delete_one({ "_id": ObjectId(product_id) })
+    result = MONGO.db.products.delete_one({"_id": ObjectId(product_id)})
     if result.deleted_count == 0:
         # Abort with Not Found, but with simple JSON response.
         response = jsonify({'status': 'Not Found'})
@@ -292,7 +290,7 @@ def return_object():
 @flask_app.route('/tuple/<path:resource>')
 def return_tuple(resource):
     dump = dump_request_detail(request)
-    return 'Hello, world! \n' + dump, 200, {'Content-Type':'text/plain'}
+    return 'Hello, world! \n' + dump, 200, {'Content-Type': 'text/plain'}
 
 
 def dump_request_detail(request):
@@ -347,7 +345,7 @@ def tweets_map():
                     </div>
                 </div>
             </div>
-            '''),
+            ''')
         ]),
 
         html.Div([
@@ -355,23 +353,30 @@ def tweets_map():
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
             html.Div([
-            dcc.Dropdown(
-                id='locations-filter',
-                options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
-                value=location
-            )], style={'width': '50%', 'margin': 'auto'}),
+                dcc.Dropdown(
+                    id='locations-filter',
+                    options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
+                    value=location
+                )], style={'width': '50%', 'margin': 'auto'}),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
-            dcc.Graph(id='tweets-map'),
+            html.Div([
+                html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%'}),
+                html.Div(style={'width': '10%'}),
+                html.Div(
+                    dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                                    <div class="random alalal" >
+                                </div>
+                                '''), style={'width': '15%'}
+                )
+            ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
-
-
-
         ],
-        style={'width': '80%', 'margin': 'auto'}
+            style={'width': '80%', 'margin': 'auto'}
         )
+
     ])
 
     return dash_app.index()
@@ -384,11 +389,10 @@ def tweets_map():
     ]
 )
 def update_tweets_map(location_filter):
-
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
 
-    location = MONGO.db[DB_LOCATIONS].find({"name":location_filter})[0]
-    #print(location)
+    location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
+    # print(location)
 
     location_query = {
         "lat": {
@@ -411,7 +415,8 @@ def update_tweets_map(location_filter):
         lons.append(tweet["lon"])
         texts.append(tweet["text"])
         sentiment = tweet["sentiment"]
-        colors.append("red" if sentiment==-1 else "yellow" if sentiment==0 else "green" if sentiment==1 else "black")
+        colors.append(
+            "red" if sentiment == -1 else "yellow" if sentiment == 0 else "green" if sentiment == 1 else "black")
 
     print(len(lats), "tweets loaded")
 
@@ -437,8 +442,8 @@ def update_tweets_map(location_filter):
             accesstoken=mapbox_access_token,
             bearing=0,
             center=dict(
-                lat=(location["lat_min"]+location["lat_max"])/2,
-                lon=(location["lon_min"]+location["lon_max"])/2
+                lat=(location["lat_min"] + location["lat_max"]) / 2,
+                lon=(location["lon_min"] + location["lon_max"]) / 2
             ),
             pitch=0,
             zoom=10
@@ -603,7 +608,6 @@ def dashboard_eurostat():
 
         html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'})
 
-
     ],
         style={'width': '80%', 'margin': 'auto'}
     )
@@ -622,7 +626,6 @@ def dashboard_eurostat():
     ]
 )
 def update_graph_1(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_value):
-
     dff = data[data['TIME'] == year_value]
 
     graph1 = {
@@ -666,7 +669,7 @@ def set_countries_options(country_flg):
     dash.dependencies.Output('countries-2', 'value'),
     [dash.dependencies.Input('countries-2', 'options')])
 def set_countries_value(available_options):
-    return [available_options[i]['value'] for i in range(0,1)]
+    return [available_options[i]['value'] for i in range(0, 1)]
 
 
 @dash_app.callback(
@@ -677,7 +680,6 @@ def set_countries_value(available_options):
     ]
 )
 def update_graph_2(countries, yaxis_column_name):
-
     data_lines = []
 
     years = data['TIME']
@@ -703,9 +705,9 @@ def update_graph_2(countries, yaxis_column_name):
         'layout': go.Layout(
             xaxis={
                 'title': 'YEAR',
-                'tick0': years.min()-1,
+                'tick0': years.min() - 1,
                 'dtick': 1,
-                'range': [years.min()-1,years.max()+1]
+                'range': [years.min() - 1, years.max() + 1]
             },
             yaxis={
                 'title': yaxis_column_name
@@ -720,4 +722,4 @@ def update_graph_2(countries, yaxis_column_name):
 
 if __name__ == '__main__':
     flask_app.run()
-    #dash_app.run_server()
+    # dash_app.run_server()
