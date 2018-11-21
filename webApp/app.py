@@ -362,13 +362,14 @@ def tweets_map():
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
             html.Div([
-                html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%'}),
-                html.Div(style={'width': '10%'}),
+                html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
+                html.Div(style={'width': '10%', 'display': 'inline-block'}),
                 html.Div(
                     dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
-                                    <div class="random alalal" >
+                                    <div class="random alalal" > Here we will see the tweets :)
                                 </div>
-                                '''), style={'width': '15%'}
+                                '''), style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top',
+                                             'padding-top': '105px'}
                 )
             ]),
 
