@@ -42,7 +42,7 @@ if __name__ == '__main__':
         data_processed = data_transformation.analize(data)
 
         # load: load processed tweets into the DB
-        data_load.load(data_processed)
+        data_load.load(DB_CREDENTIALS,data_processed)
 
         print("Completed")
         print()
