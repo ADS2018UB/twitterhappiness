@@ -9,7 +9,7 @@ class DataExtraction:
         self.twitter_api = twitter_api
         pass
 
-    def collect(self, location):
+    def collect(self, location, n=1000):
         print("Collecting data for", location["name"])
 
         places = self.twitter_api.reverse_geocode(
@@ -17,6 +17,6 @@ class DataExtraction:
             long=location['lon_center'],
             accuracy=location['radius'])
         place_id = places[0].id
-        tweets = self.twitter_api.search(q="place:%s" % place_id, lang='en', count=10)
+        tweets = self.twitter_api.search(q="place:%s" % place_id, lang='en', count=n)
 
         return [tweet._json for tweet in tweets]
