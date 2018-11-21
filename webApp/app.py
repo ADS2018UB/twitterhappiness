@@ -365,12 +365,7 @@ def tweets_map():
                 html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
                 html.Div(style={'width': '10%', 'display': 'inline-block'}),
                 html.Div(
-                    dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
-                                    <div class="random alalal" > Here we will see the tweets :)
-                                </div>
-                                '''), style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top',
-                                             'padding-top': '105px'}
-                )
+                    id='tweets-list', style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top','padding-top': '105px'})
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
@@ -381,6 +376,39 @@ def tweets_map():
     ])
 
     return dash_app.index()
+
+@dash_app.callback(
+    dash.dependencies.Output('tweets-list', 'children'),
+    [
+        dash.dependencies.Input('locations-filter', 'value')
+    ]
+)
+def update_tweets_list(loc_filter):
+    location = MONGO.db[DB_LOCATIONS].find({"name": loc_filter})[0]
+    # print(location)
+
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:50]
+
+    html_content = '<div class="tweets-scrolling-box" > '
+    for tweet in tweets:
+        print(tweet)
+        html_content += 'divwvw' + text.ext + 'div q tanca'
+    html_content += '</div>'
+    html_content = ''.join([html_content, '</div>'])
+
+    content = html.Div(
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content))
+    return content
 
 
 @dash_app.callback(
