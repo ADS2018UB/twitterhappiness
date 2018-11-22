@@ -19,4 +19,6 @@ class DataExtraction:
         place_id = places[0].id
         tweets = self.twitter_api.search(q="place:%s" % place_id, lang='en', count=n)
 
+        print("Tweets collected:", len(tweets))
+
         return [tweet._json for tweet in tweets]

@@ -25,25 +25,21 @@ if __name__ == '__main__':
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_key, access_secret)
     twitter_api = tweepy.API(auth)
-    print("twitter connection successful")
+    print("twitter connection successful\n")
 
     de = DataExtraction(twitter_api)
 
-
-
-    print()
     for location in db_locations.find():
         print("Processing data for ", location["name"])
 
         # extraction: download tweets from Twitter API
         data = de.collect(location)
 
-        # transformation: process/analize downloaded tweets
-        data_processed = data_transformation.analize(data)
+        # transformation: process/analyze downloaded tweets
+        data_processed = data_transformation.analyze(data)
 
         # load: load processed tweets into the DB
 
         data_load.load(DB_CREDENTIALS,data_processed)
 
-        print("Completed")
-        print()
+        print("Completed\n")
