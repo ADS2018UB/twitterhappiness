@@ -365,7 +365,9 @@ def tweets_map():
                 html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
                 html.Div(style={'width': '10%', 'display': 'inline-block'}),
                 html.Div(
-                    id='tweets-list', style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top', 'padding-top': '105px', 'line-height': '200%'})
+                    id='tweets-list', style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top',
+                                             'padding-top': '105px', 'line-height': '200%', 'position': 'static',
+                                             'overflow': 'auto', 'white-space': 'pre-line'})
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
@@ -376,6 +378,7 @@ def tweets_map():
     ])
 
     return dash_app.index()
+
 
 @dash_app.callback(
     dash.dependencies.Output('tweets-list', 'children'),
@@ -397,15 +400,16 @@ def update_tweets_list(location_filter):
             "$lt": location["lon_max"]
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:5]
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:2]
 
     html_content = '<div class="tweets-scrolling-box" > '
     for tweet in tweets:
+        # {white-space: pre-line;}
         html_content += '<div>' + tweet['text'] + '</div>'
     html_content = ''.join([html_content, '</div>'])
 
     content = html.Div(
-            dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content))
+        dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content))
     return content
 
 
