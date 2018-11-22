@@ -4,8 +4,8 @@
 # output: processed tweets (with sentiments and whatever needed)
 
 
-import numpy as np
 from textblob import TextBlob
+
 
 def decide_class(sentiment):
     if sentiment <= -0.5:
@@ -20,7 +20,7 @@ def decide_class(sentiment):
         return 2
 
 
-def analize(data):
+def analyze(data):
     print("Analyzing data: ")
 
     for elem in data:
