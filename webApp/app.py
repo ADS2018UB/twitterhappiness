@@ -365,7 +365,7 @@ def tweets_map():
                 html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
                 html.Div(style={'width': '10%', 'display': 'inline-block'}),
                 html.Div(
-                    id='tweets-list', style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top','padding-top': '105px'})
+                    id='tweets-list', style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top', 'padding-top': '105px', 'line-height': '200%'})
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
@@ -383,8 +383,8 @@ def tweets_map():
         dash.dependencies.Input('locations-filter', 'value')
     ]
 )
-def update_tweets_list(loc_filter):
-    location = MONGO.db[DB_LOCATIONS].find({"name": loc_filter})[0]
+def update_tweets_list(location_filter):
+    location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
     # print(location)
 
     location_query = {
@@ -397,13 +397,11 @@ def update_tweets_list(loc_filter):
             "$lt": location["lon_max"]
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:50]
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:5]
 
     html_content = '<div class="tweets-scrolling-box" > '
     for tweet in tweets:
-        print(tweet)
-        html_content += 'divwvw' + text.ext + 'div q tanca'
-    html_content += '</div>'
+        html_content += '<div>' + tweet['text'] + '</div>'
     html_content = ''.join([html_content, '</div>'])
 
     content = html.Div(
