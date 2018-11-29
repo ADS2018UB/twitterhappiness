@@ -16,22 +16,22 @@
     <td>{{ tweet.text }}</td>
     <td> {{ tweet.sentiment }} </td>
     <td>
-      {% if tweet.sentiment == 1 %}
+      {% if tweet.class == 1 %}
         😁
-      {% elif tweet.sentiment == 0 %}
+      {% elif tweet.class == 0 %}
         😶
-      {% elif tweet.sentiment == -1 %}
+      {% elif tweet.class == -1 %}
         😔
       {% else %}
       {% endif %}
     </td>
     {% if show_sentiment_icon %}
     <td>
-      {% if tweet.sentiment == 1 %}
+      {% if tweet.class == 1 %}
         <div></div><img src="/static/icon_happy.png" style="height: 15px">
-      {% elif tweet.sentiment == 0 %}
+      {% elif tweet.class == 0 %}
         <div></div><img src="/static/icon_neutral.png" style="height: 15px">
-      {% elif tweet.sentiment == -1 %}
+      {% elif tweet.class == -1 %}
         <div></div><img src="/static/icon_sad.png" style="height: 15px">
       {% else %}
       {% endif %}
