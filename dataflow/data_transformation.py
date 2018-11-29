@@ -28,4 +28,11 @@ def analyze(data):
         elem['sentiment'] = sentiment
         elem['class'] = decide_class(sentiment)
 
+        if elem["coordinates"] is not None and elem["coordinates"]["type"] == "Point":
+            elem['lat'] = elem["coordinates"]["coordinates"][1]
+            elem['lon'] = elem["coordinates"]["coordinates"][0]
+        else:
+            elem['lat'] = None
+            elem['lon'] = None
+
     return data
