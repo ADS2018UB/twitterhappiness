@@ -441,7 +441,15 @@ def update_tweets_map(location_filter):
             "$lt": location["lon_max"]
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:300]
+
+    sent_class_color = {
+        -2: "rgb(255, 0, 0)",
+        -1: "rgb(255, 102, 0)",
+        0: "rgb(255, 255, 0)",
+        1: "rgb(153, 255, 51)",
+        2: "rgb(0, 255, 0)",
+    }
 
     lats = []
     lons = []
@@ -451,9 +459,8 @@ def update_tweets_map(location_filter):
         lats.append(tweet["lat"])
         lons.append(tweet["lon"])
         texts.append(tweet["text"])
-        sentiment = tweet["sentiment"]
-        colors.append(
-            "red" if sentiment == -1 else "yellow" if sentiment == 0 else "green" if sentiment == 1 else "black")
+        sent_class = tweet["class"]
+        colors.append(sent_class_color[sent_class])
 
     print(len(lats), "tweets loaded")
 
