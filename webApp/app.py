@@ -1,5 +1,5 @@
 
-# general imports
+# GENERAL IMPORTS
 import os
 import textwrap
 import json
@@ -7,25 +7,13 @@ from bson.objectid import ObjectId
 import bson
 import pandas as pd
 
-# flask import
-from flask import Flask
-from flask import render_template
-from flask import Flask, make_response, request
+# FLASK IMPORTS
+from flask import Flask, render_template, make_response, request
 from flask_pymongo import PyMongo
-
 from flask import abort, jsonify, redirect, render_template
 from flask import request, url_for
-from forms import ProductForm
 
-from flask_login import LoginManager, current_user
-from flask_login import login_user, logout_user
-
-from forms import LoginForm
-from models import User
-
-
-# dash imports
-
+# DASH IMPORTS
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
