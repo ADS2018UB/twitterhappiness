@@ -5,7 +5,7 @@ from flask_pymongo import PyMongo
 
 from flask import abort, jsonify, redirect, render_template
 from flask import request, url_for
-from forms import ProductForm
+from .forms import ProductForm
 
 import json
 from bson.objectid import ObjectId
@@ -14,8 +14,8 @@ import bson
 from flask_login import LoginManager, current_user
 from flask_login import login_user, logout_user
 
-from forms import LoginForm
-from models import User
+from .forms import LoginForm
+from .models import User
 
 from flask_login import login_required
 
@@ -28,13 +28,13 @@ import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
 import pandas as pd
 
-from data import load_data
+from .data import load_data
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
 
 flask_app = Flask(__name__)
-dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards')
+dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards/')
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
 dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/bootswatch/2.3.2/united/bootstrap.min.css"})
@@ -207,6 +207,11 @@ def about_us():
     tweets = MONGO.db[DB_TWEETS].find()[50:60]
     return render_template('tweets/list.html', tweets=tweets)
 
+@flask_app.route('/tweets-tl/')
+def tweets_tl():
+    """Provide HTML listing of all Tweets."""
+    print("hola")
+    return render_template('tweets/list.html')
 
 @flask_app.route('/products/')
 def products_list():
@@ -337,6 +342,7 @@ def tweets_map():
                         <ul class="nav">
                             <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
                             <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
+                            <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
                             <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
                         </ul>
                         <ul class="nav pull-right">
@@ -486,7 +492,7 @@ def update_tweets_map(location_filter):
 
     '''layout = dict(
         autosize=True,
-        
+
         font=dict(color='#CCCCCC'),
         titlefont=dict(color='#CCCCCC', size='14'),
         margin=dict(
