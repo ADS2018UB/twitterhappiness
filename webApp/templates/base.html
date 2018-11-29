@@ -30,30 +30,13 @@
             <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
                 <div class="container">
                     <a href="{{ url_for('home_page') }}" class="brand" style="text-shadow: none;">Twitter Happiness</a>
-                    {% if current_user.is_authenticated %}
-                    <ul class="nav" style="text-shadow: none;">
-                        <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
-                        <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
-                        <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
-                    </ul>
-                    <ul class="nav pull-right">
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ current_user.username }} <b class="caret"></b></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    {% else %}
                     <ul class="nav">
                         <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
                         <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
-                        <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
                     </ul>
                     <ul class="nav pull-right">
-                        <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
+                        <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
                     </ul>
-                    {% endif %}
                 </div>
             </div>
         </div>
