@@ -435,7 +435,7 @@ def update_tweets_map(location_filter):
             "$lt": location["lon_max"]
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:300]
 
     lats = []
     lons = []
