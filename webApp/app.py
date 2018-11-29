@@ -42,7 +42,8 @@ dash_app.css.append_css(
     {'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
 
 mlab_credentials_file = "../credentials/mlab_credentials.txt"
-DB_TWEETS = "twitter_happiness_test"
+#DB_TWEETS = "twitter_happiness_test"
+DB_TWEETS = "tweets"
 DB_LOCATIONS = "twitter_happiness_locations"
 DB_UP = False
 
