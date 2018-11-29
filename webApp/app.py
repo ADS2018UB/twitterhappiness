@@ -1,3 +1,13 @@
+
+# general imports
+import os
+import textwrap
+import json
+from bson.objectid import ObjectId
+import bson
+import pandas as pd
+
+# flask import
 from flask import Flask
 from flask import render_template
 from flask import Flask, make_response, request
@@ -7,28 +17,21 @@ from flask import abort, jsonify, redirect, render_template
 from flask import request, url_for
 from forms import ProductForm
 
-import json
-from bson.objectid import ObjectId
-import bson
-
 from flask_login import LoginManager, current_user
 from flask_login import login_user, logout_user
 
 from forms import LoginForm
 from models import User
 
-from flask_login import login_required
 
-import os
+# dash imports
 
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
-import pandas as pd
 
-from data import load_data
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
@@ -163,9 +166,9 @@ def tweets_map():
         location = request.args['location']
     except:
         pass
-    if location == None:
+    if location is None:
         location = locations[0]["name"]
-    print(location)
+    #print(location)
 
     dash_app.layout = html.Div([
 
@@ -264,7 +267,7 @@ def update_tweets_map(location_filter):
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
 
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
-    # print(location)
+    #print(location)
 
     location_query = {
         "lat": {
@@ -276,9 +279,9 @@ def update_tweets_map(location_filter):
             "$lt": location["lon_max"]
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:300]
+    tweets = MONGO.db[DB_TWEETS].find(location_query) #[:300]
 
-    sent_class_color = {
+    sentiment_class_colors = {
         -2: "rgb(255, 0, 0)",
         -1: "rgb(255, 102, 0)",
         0: "rgb(255, 255, 0)",
@@ -293,11 +296,11 @@ def update_tweets_map(location_filter):
     for tweet in tweets:
         lats.append(tweet["lat"])
         lons.append(tweet["lon"])
-        texts.append(tweet["text"])
-        sent_class = tweet["class"]
-        colors.append(sent_class_color[sent_class])
+        texts.append("<br>".join(textwrap.wrap(tweet["text"],50)))
+        sentiment_class = tweet["class"]
+        colors.append(sentiment_class_colors[sentiment_class])
 
-    print(len(lats), "tweets loaded")
+    #print(len(lats), "tweets loaded")
 
     data = [
         go.Scattermapbox(
@@ -305,12 +308,12 @@ def update_tweets_map(location_filter):
             lon=lons,
             mode='markers',
             marker=dict(
-                #symbol="square",
+                # symbol="square",
                 size=14,
                 color=colors,
             ),
             text=texts,
-            hoverinfo='text'
+            hoverinfo='text'  # 'name + x + y + text'
         )
     ]
 
@@ -322,8 +325,8 @@ def update_tweets_map(location_filter):
             accesstoken=mapbox_access_token,
             bearing=0,
             center=dict(
-                lat=(location["lat_min"] + location["lat_max"]) / 2,
-                lon=(location["lon_min"] + location["lon_max"]) / 2
+                lat=location["lat_center"],
+                lon=location["lon_center"]
             ),
             pitch=0,
             zoom=10
@@ -331,46 +334,6 @@ def update_tweets_map(location_filter):
     )
 
     map1 = dict(data=data, layout=layout)
-
-    '''layout = dict(
-        autosize=True,
-        
-        font=dict(color='#CCCCCC'),
-        titlefont=dict(color='#CCCCCC', size='14'),
-        margin=dict(
-            l=35,
-            r=35,
-            b=35,
-            t=45
-        ),
-        hovermode="closest",
-        plot_bgcolor="#191A1A",
-        paper_bgcolor="#020202",
-        legend=dict(font=dict(size=10), orientation='h'),
-        title='Satellite Overview',
-        mapbox=dict(
-            accesstoken=mapbox_access_token,
-            style="dark",
-            center=dict(
-                lon=41.408366,
-                lat=2.137533,
-                zoom = 7
-            )
-        )
-    )
-    trace = dict(
-        type='scattermapbox',
-        lon=[41.408366, 41.407288],
-        lat=[2.137533, 2.138364],
-        text='Well_Name',
-        name='well_type',
-        marker=dict(
-            size=4,
-            opacity=0.8,
-            color='blue'
-        )
-    )
-    map1 = dict(data=trace, layout=layout)'''
 
     return map1
 
