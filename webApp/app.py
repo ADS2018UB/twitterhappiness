@@ -2,6 +2,7 @@
 # GENERAL IMPORTS
 import os
 import textwrap
+import datetime
 import json
 from bson.objectid import ObjectId
 import bson
@@ -29,8 +30,8 @@ dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards'
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
 dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/bootswatch/2.3.2/united/bootstrap.min.css"})
-dash_app.css.append_css(
-    {'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
+dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
+dash_app.css.append_css({"external_url": "/static/styles/dashboard.css"})
 
 mlab_credentials_file = "../credentials/mlab_credentials.txt"
 #DB_TWEETS = "twitter_happiness_test"
@@ -158,6 +159,11 @@ def tweets_map():
         location = locations[0]["name"]
     #print(location)
 
+    days_history = 6
+    days_markers = {}
+    for i in range(-days_history, 1):
+        days_markers[i] = datetime.datetime.strftime(datetime.datetime.today() + datetime.timedelta(days=i), "%d-%m-%Y")
+
     dash_app.layout = html.Div([
 
         html.Div([
@@ -168,11 +174,10 @@ def tweets_map():
                         <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
                         <ul class="nav">
                             <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
-                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
-                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
                         </ul>
                         <ul class="nav pull-right">
-                            <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
+                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
                         </ul>
                     </div>
                 </div>
@@ -190,6 +195,17 @@ def tweets_map():
                     options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
                     value=location
                 )], style={'width': '50%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                dcc.RangeSlider(
+                    id='date-slider',
+                    min=-days_history,
+                    max=0,
+                    marks=days_markers,
+                    value=[-days_history, 0]
+                )], style={'width': '80%', 'margin': 'auto'}),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
@@ -248,11 +264,17 @@ def update_tweets_list(location_filter):
 @dash_app.callback(
     dash.dependencies.Output('tweets-map', 'figure'),
     [
-        dash.dependencies.Input('locations-filter', 'value')
+        dash.dependencies.Input('locations-filter', 'value'),
+        dash.dependencies.Input('date-slider', 'value')
     ]
 )
-def update_tweets_map(location_filter):
+def update_tweets_map(location_filter, date_filter):
+
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
+
+    min_day = datetime.datetime.today().replace(hour=00, minute=00) + datetime.timedelta(days=date_filter[0])
+    max_day = datetime.datetime.today().replace(hour=23, minute=59) + datetime.timedelta(days=date_filter[1])
+    print(min_day, ' - ', max_day)
 
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
     #print(location)
