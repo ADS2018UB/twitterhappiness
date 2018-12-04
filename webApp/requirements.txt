@@ -12,6 +12,7 @@ Flask-Compress==1.4.0
 Flask-Login==0.4.1
 Flask-PyMongo==2.1.0
 Flask-Script==2.0.6
+folium==0.7.0
 gunicorn==19.9.0
 idna==2.7
 ipython-genutils==0.2.0
