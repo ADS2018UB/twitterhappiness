@@ -7,8 +7,6 @@ import json
 from bson.objectid import ObjectId
 import bson
 import pandas as pd
-import folium
-from folium.features import CustomIcon
 
 # FLASK IMPORTS
 from flask import Flask, render_template, make_response, request
@@ -22,6 +20,11 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
+
+# FOLIUM IMPORTS
+import folium
+from folium.features import CustomIcon
+from folium.plugins import HeatMap
 
 
 # dash_app = dash.Dash(__name__)
@@ -146,6 +149,20 @@ def about_us():
     return render_template('tweets/list.html', tweets=tweets)
 
 
+def select_custom_emoji(root_url, sentiment):
+    # https://emojipedia.org/whatsapp/
+    if sentiment == -2:
+        return folium.features.CustomIcon(root_url+"static/emoji_-2.png", icon_size=(15, 15))
+    elif sentiment == -1:
+        return folium.features.CustomIcon(root_url +"static/emoji_-1.png", icon_size=(15, 15))
+    elif sentiment == 1:
+        return folium.features.CustomIcon(root_url +"static/emoji_1.png", icon_size=(15, 15))
+    elif sentiment == 2:
+        return folium.features.CustomIcon(root_url +"static/emoji_2.png", icon_size=(15, 15))
+    else:
+        return folium.features.CustomIcon(root_url + "static/emoji_0.png", icon_size=(15, 15))
+
+
 def select_custom_icon(root_url, sentiment):
     if sentiment < 0:
         return folium.features.CustomIcon(root_url+"static/icon_sad.png", icon_size=(15, 15))
@@ -155,8 +172,8 @@ def select_custom_icon(root_url, sentiment):
         return folium.features.CustomIcon(root_url+"static/icon_neutral.png", icon_size=(15, 15))
 
 
-@flask_app.route('/tweets-map-new/')
-def tweets_map_new():
+@flask_app.route('/tweets-map-icons/')
+def tweets_map_icons():
     root_url = request.url_root
 
     location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
@@ -183,11 +200,177 @@ def tweets_map_new():
     for tweet in tweets:
         m.add_child(folium.Marker(
             location=[tweet['lat'], tweet['lon']],
+            #icon=select_custom_emoji(root_url, tweet["class"]),
             icon=select_custom_icon(root_url, tweet["class"]),
             popup=folium.Popup(tweet['text'])
         ))
 
-    #m.save('map.html')
+    m.save('maps/map_icons.html')
+    #with open('map.html') as f:
+    #    map_html = f.read()
+    #print(map_html)
+    map_html = m.get_root().render()
+
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                    <div class="navbar navbar-static-top" >
+                    <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                        <div class="container">
+                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                            <ul class="nav">
+                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''')
+        ]),
+
+        html.Div([
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                dcc.RangeSlider(
+                    id='date-slider',
+                    min=-5,
+                    max=0,
+                    value=[-5, 0]
+                )], style={'width': '80%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
+
+            #dash_dangerously_set_inner_html.DangerouslySetInnerHTML(map_html)
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
+
+
+@flask_app.route('/tweets-map-emojis/')
+def tweets_map_emojis():
+    root_url = request.url_root
+
+    location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    tweets = [tweet for tweet in tweets]
+
+    m = folium.Map(
+        location=[location["lat_center"], location["lon_center"]],
+        tiles='CartoDB positron',  # 'CartoDB dark_matter', 'OpenStreetMap'
+        zoom_start=12
+    )
+
+    for tweet in tweets:
+        m.add_child(folium.Marker(
+            location=[tweet['lat'], tweet['lon']],
+            icon=select_custom_emoji(root_url, tweet["class"]),
+            popup=folium.Popup(tweet['text'])
+        ))
+
+    m.save('maps/map_emojis.html')
+    #with open('map.html') as f:
+    #    map_html = f.read()
+    #print(map_html)
+    map_html = m.get_root().render()
+
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                    <div class="navbar navbar-static-top" >
+                    <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                        <div class="container">
+                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                            <ul class="nav">
+                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''')
+        ]),
+
+        html.Div([
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                dcc.RangeSlider(
+                    id='date-slider',
+                    min=-5,
+                    max=0,
+                    value=[-5, 0]
+                )], style={'width': '80%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
+
+            #dash_dangerously_set_inner_html.DangerouslySetInnerHTML(map_html)
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
+
+
+@flask_app.route('/tweets-map-heatmap/')
+def tweets_map_heatmap():
+
+    location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    data = [[tweet['lat'],tweet['lon'],tweet["class"]] for tweet in tweets]
+
+    m = folium.Map(
+        # http://python-visualization.github.io/folium/docs-v0.5.0/plugins.html
+        location=[location["lat_center"], location["lon_center"]],
+        tiles='CartoDB positron', #'stamentoner',
+        zoom_start=12
+    )
+
+    HeatMap(data).add_to(m)
+
+    m.save('maps/map_heatmap.html')
     #with open('map.html') as f:
     #    map_html = f.read()
     #print(map_html)
