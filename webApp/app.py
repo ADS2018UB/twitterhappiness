@@ -7,6 +7,8 @@ import json
 from bson.objectid import ObjectId
 import bson
 import pandas as pd
+import folium
+from folium.features import CustomIcon
 
 # FLASK IMPORTS
 from flask import Flask, render_template, make_response, request
@@ -144,6 +146,100 @@ def about_us():
     return render_template('tweets/list.html', tweets=tweets)
 
 
+def select_custom_icon(root_url, sentiment):
+    if sentiment < 0:
+        return folium.features.CustomIcon(root_url+"static/icon_sad.png", icon_size=(15, 15))
+    elif sentiment > 0:
+        return folium.features.CustomIcon(root_url+"static/icon_happy.png", icon_size=(15, 15))
+    else:
+        return folium.features.CustomIcon(root_url+"static/icon_neutral.png", icon_size=(15, 15))
+
+
+@flask_app.route('/tweets-map-new/')
+def tweets_map_new():
+    root_url = request.url_root
+
+    location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    tweets = [tweet for tweet in tweets]
+
+    m = folium.Map(
+        location=[location["lat_center"], location["lon_center"]],
+        tiles='CartoDB positron',  # 'CartoDB dark_matter', 'OpenStreetMap'
+        zoom_start=12
+    )
+
+    for tweet in tweets:
+        m.add_child(folium.Marker(
+            location=[tweet['lat'], tweet['lon']],
+            icon=select_custom_icon(root_url, tweet["class"]),
+            popup=folium.Popup(tweet['text'])
+        ))
+
+    #m.save('map.html')
+    #with open('map.html') as f:
+    #    map_html = f.read()
+    #print(map_html)
+    map_html = m.get_root().render()
+
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                    <div class="navbar navbar-static-top" >
+                    <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                        <div class="container">
+                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                            <ul class="nav">
+                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''')
+        ]),
+
+        html.Div([
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                dcc.RangeSlider(
+                    id='date-slider',
+                    min=-5,
+                    max=0,
+                    value=[-5, 0]
+                )], style={'width': '80%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
+
+            #dash_dangerously_set_inner_html.DangerouslySetInnerHTML(map_html)
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
+
+
 @flask_app.route('/tweets-map/')
 def tweets_map():
     global dash_app
@@ -207,7 +303,7 @@ def tweets_map():
                     value=[-days_history, 0]
                 )], style={'width': '80%', 'margin': 'auto'}),
 
-            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
 
             html.Div([
                 html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
@@ -219,6 +315,8 @@ def tweets_map():
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
+
+            html.Div(id='selected-tweet')
         ],
             style={'width': '80%', 'margin': 'auto'}
         )
@@ -329,7 +427,7 @@ def update_tweets_map(location_filter, date_filter):
 
     layout = go.Layout(
         autosize=True,
-        height=800,
+        height=600,
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
@@ -341,11 +439,28 @@ def update_tweets_map(location_filter, date_filter):
             pitch=0,
             zoom=10
         ),
+        margin={
+            'l': 0,
+            'r': 0,
+            'b': 0,
+            't': 0
+        },
     )
 
     map1 = dict(data=data, layout=layout)
 
     return map1
+
+
+@dash_app.callback(
+    dash.dependencies.Output('selected-tweet', 'children'),
+    [
+        dash.dependencies.Input('tweets-map', 'hoverData')
+    ]
+)
+def display_data(hover_point):
+    #print(hover_point)
+    return json.dumps(hover_point, indent=2)
 
 
 if __name__ == '__main__':
