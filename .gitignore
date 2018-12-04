@@ -1,6 +1,7 @@
 credentials
 data/source/*
 .idea/*
+webApp/maps/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
