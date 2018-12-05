@@ -6,7 +6,7 @@
 import db_connection
 from data_extraction import DataExtraction
 import data_transformation
-import data_load
+from data_load import DataLoad
 import tweepy
 
 
@@ -29,6 +29,8 @@ if __name__ == '__main__':
 
     de = DataExtraction(twitter_api)
 
+    dl = DataLoad(DB_CREDENTIALS)
+
     for location in db_locations.find():
         print("Processing data for ", location["name"])
 
@@ -40,6 +42,6 @@ if __name__ == '__main__':
 
         # load: load processed tweets into the DB
 
-        data_load.load(DB_CREDENTIALS,data_processed)
+        dl.load(data_processed)
 
         print("Completed\n")
