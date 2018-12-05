@@ -753,5 +753,14 @@ def update_graph_2(countries, yaxis_column_name):
 
 
 if __name__ == '__main__':
-    flask_app.run()
+    import argparse
+
+    parser = argparse.ArgumentParser(conflict_handler='resolve')
+
+    parser.add_argument('--host', '-h', help='Host (IP)', type=str, default='0.0.0.0')
+    parser.add_argument('--port', '-p', help='Port', type=str, default='80')
+
+    args = parser.parse_args()
+
+    flask_app.run(host=args.host, port=args.port)
     # dash_app.run_server()
