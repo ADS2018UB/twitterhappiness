@@ -368,7 +368,7 @@ def tweets_map():
                     id='tweets-list', style={'width': '19%', 'display': 'inline-block', 'vertical-align': 'top',
                                              'padding-top': '105px', 'line-height': '200%', 'position': 'static',
                                              'overflow': 'auto', 'white-space': 'pre-line', 'min-height': '100px',
-                                             'max-height': '600px', 'border': '1px solid #ccc'})
+                                             'max-height': '600px', 'border': '1px solid #FFFFFF'})
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
