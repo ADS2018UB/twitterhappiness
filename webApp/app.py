@@ -236,14 +236,6 @@ def tweets_map_icons():
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
-            html.Div([
-                dcc.RangeSlider(
-                    id='date-slider',
-                    min=-5,
-                    max=0,
-                    value=[-5, 0]
-                )], style={'width': '80%', 'margin': 'auto'}),
-
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
             html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
@@ -321,14 +313,6 @@ def tweets_map_emojis():
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
-            html.Div([
-                dcc.RangeSlider(
-                    id='date-slider',
-                    min=-5,
-                    max=0,
-                    value=[-5, 0]
-                )], style={'width': '80%', 'margin': 'auto'}),
-
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
             html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
@@ -400,14 +384,6 @@ def tweets_map_heatmap():
         html.Div([
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
-
-            html.Div([
-                dcc.RangeSlider(
-                    id='date-slider',
-                    min=-5,
-                    max=0,
-                    value=[-5, 0]
-                )], style={'width': '80%', 'margin': 'auto'}),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
@@ -553,21 +529,25 @@ def update_tweets_map(location_filter, date_filter):
 
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
 
-    min_day = datetime.datetime.today().replace(hour=00, minute=00) + datetime.timedelta(days=date_filter[0])
-    max_day = datetime.datetime.today().replace(hour=23, minute=59) + datetime.timedelta(days=date_filter[1])
-    print(min_day, ' - ', max_day)
+    min_day = datetime.datetime.today().replace(hour=00, minute=00, second=00) + datetime.timedelta(days=date_filter[0])
+    max_day = datetime.datetime.today().replace(hour=23, minute=59, second=59) + datetime.timedelta(days=date_filter[1])
+    #print(min_day, ' - ', max_day)
 
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
     #print(location)
 
     location_query = {
         "lat": {
-            "$gt": location["lat_min"],
-            "$lt": location["lat_max"]
+            "$gte": location["lat_min"],
+            "$lte": location["lat_max"]
         },
         "lon": {
-            "$gt": location["lon_min"],
-            "$lt": location["lon_max"]
+            "$gte": location["lon_min"],
+            "$lte": location["lon_max"]
+        },
+        "datetime": {
+            "$gte": min_day,
+            "$lte": max_day,
         }
     }
     tweets = MONGO.db[DB_TWEETS].find(location_query) #[:300]
@@ -587,7 +567,9 @@ def update_tweets_map(location_filter, date_filter):
     for tweet in tweets:
         lats.append(tweet["lat"])
         lons.append(tweet["lon"])
-        texts.append("<br>".join(textwrap.wrap(tweet["text"],50)))
+        texts.append(
+            "<br>".join(textwrap.wrap(tweet["text"],50)) + "<br><i>" + datetime.datetime.strftime(tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>"
+        )
         sentiment_class = tweet["class"]
         colors.append(sentiment_class_colors[sentiment_class])
 
