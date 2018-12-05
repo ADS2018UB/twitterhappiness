@@ -27,6 +27,7 @@ import dash_html_components as html
 import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
 import pandas as pd
+import datetime
 
 from .data import load_data
 
@@ -209,9 +210,185 @@ def about_us():
 
 @flask_app.route('/tweets-tl/')
 def tweets_tl():
-    """Provide HTML listing of all Tweets."""
-    print("hola")
-    return render_template('tweets/list.html')
+    global dash_app
+
+    locations = [loc for loc in MONGO.db[DB_LOCATIONS].find().sort("name")]
+
+    location = None
+    try:
+        location = request.args['location']
+    except:
+        pass
+    if location == None:
+        location = locations[0]["name"]
+    print(location)
+
+    days_history = 6
+    days_markers = {}
+    for i in range(-days_history, 1):
+        days_markers[i] = datetime.datetime.strftime(datetime.datetime.today() + datetime.timedelta(days=i), "%d-%m-%Y")
+
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                <div class="navbar navbar-static-top" >
+                <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                    <div class="container">
+                        <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                        <ul class="nav">
+                            <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
+                            <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
+                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                        </ul>
+                        <ul class="nav pull-right">
+                            <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            ''')
+        ]),
+
+        html.Div([
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+            ## multi=True
+            html.Div([
+                dcc.Dropdown(
+                    id='locations-filter',
+                    options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
+                    value=location
+                )], style={'width': '50%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                dcc.RangeSlider(
+                    id='date-slider',
+                    min=-days_history,
+                    max=0,
+                    marks=days_markers,
+                    value=[-days_history, 0]
+                )], style={'width': '80%', 'margin': 'auto'}),
+
+             html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+            html.Div([
+                html.Div(dcc.Graph(id='tweets-tl'), style={'width': '75%', 'margin':'auto'}),
+                html.Div(style={'width': '100%', 'display': 'inline-block'})
+
+            ]),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
+
+def select_image(mean):
+    if mean > 0.05:
+        return 'static/icon_happy.png'
+    if mean < -0.05:
+        return 'static/icon_sad.png'
+    else: return 'static/icon_neutral.png'
+
+
+@dash_app.callback(
+    dash.dependencies.Output('tweets-tl', 'figure'),
+    [
+        dash.dependencies.Input('locations-filter', 'value'),
+        dash.dependencies.Input('date-slider', 'value')
+    ]
+)
+def update_tweets_tl(location_filter, date_filter):
+    root_url = request.url_root
+
+    location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
+    # print(location)
+
+    min_day = datetime.datetime.today().replace(hour=00, minute=00, second=00) + datetime.timedelta(days=date_filter[0])
+    max_day = datetime.datetime.today().replace(hour=23, minute=59, second=59) + datetime.timedelta(days=date_filter[1])
+
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        },
+        "datetime": {
+            "$gte": min_day,
+            "$lte": max_day,
+        }
+    }
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:300]
+
+    classes = []
+    classes_categ = []
+    dicc_classes = {-2: 'Very Negative', -1: 'Negative', 0: 'Neutral',
+    1: 'Positive', 2:'Very Positive'}
+    nb_tweets = 0
+    for tweet in tweets:
+        classes.append(tweet["class"])
+        classes_categ.append(dicc_classes[tweet['class']])
+        nb_tweets += 1
+
+    y = [1,1,1,1,1]
+    for category in classes:
+        y[category+2] +=1
+
+    try:
+        mean = sum(classes)/nb_tweets
+    except: mean = 0
+    print(y)
+    data = [
+
+    go.Histogram(
+    y = y,
+    histfunc = "sum",
+    x = ['Very Negative',  'Negative', 'Neutral',
+     'Positive','Very Positive'],
+
+     histnorm='probability',
+     marker=dict(
+        color=['rgba(219, 29, 0,1)', 'rgba(255, 96, 61,1)',
+               'rgba(245,255,20,1)', 'rgba(86, 244, 66,1)',
+               'rgba(4, 160, 4,1)'])
+    )
+    ]
+
+    layout = go.Layout(
+    title='Sentiment in {}'.format(location_filter),
+
+    yaxis=dict(
+        title='% of tweets'
+    ),
+    bargap=0.2,
+    bargroupgap=0.1,
+    images=[dict(
+        source=root_url+select_image(mean),
+        xref="paper", yref="paper",
+        x=0.825, y=1.1,
+        sizex=0.25, sizey=0.25,
+        xanchor="right", yanchor="bottom"
+      )]
+    )
+    # we add a scatter trace with data points in opposite corners to give the Autoscale feature a reference point
+
+
+
+    hist1 = dict(data=data, layout=layout)
+
+
+    return hist1
+
 
 @flask_app.route('/products/')
 def products_list():
