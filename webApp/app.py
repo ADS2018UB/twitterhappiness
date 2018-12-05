@@ -363,11 +363,12 @@ def tweets_map():
 
             html.Div([
                 html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
-                html.Div(style={'width': '10%', 'display': 'inline-block'}),
+                html.Div(style={'width': '5%', 'display': 'inline-block'}),
                 html.Div(
-                    id='tweets-list', style={'width': '15%', 'display': 'inline-block', 'vertical-align': 'top',
+                    id='tweets-list', style={'width': '19%', 'display': 'inline-block', 'vertical-align': 'top',
                                              'padding-top': '105px', 'line-height': '200%', 'position': 'static',
-                                             'overflow': 'auto', 'white-space': 'pre-line'})
+                                             'overflow': 'auto', 'white-space': 'pre-line', 'min-height': '100px',
+                                             'max-height': '600px', 'border': '1px solid #ccc'})
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
@@ -400,7 +401,7 @@ def update_tweets_list(location_filter):
             "$lt": location["lon_max"]
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:2]
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:20]
 
     html_content = '<div class="tweets-scrolling-box" > '
     for tweet in tweets:
