@@ -1,34 +1,31 @@
-from flask import Flask
-from flask import render_template
-from flask import Flask, make_response, request
-from flask_pymongo import PyMongo
 
-from flask import abort, jsonify, redirect, render_template
-from flask import request, url_for
-from forms import ProductForm
-
+# GENERAL IMPORTS
+import os
+import textwrap
+import datetime
 import json
 from bson.objectid import ObjectId
 import bson
+import pandas as pd
 
-from flask_login import LoginManager, current_user
-from flask_login import login_user, logout_user
+# FLASK IMPORTS
+from flask import Flask, render_template, make_response, request
+from flask_pymongo import PyMongo
+from flask import abort, jsonify, redirect, render_template
+from flask import request, url_for
 
-from forms import LoginForm
-from models import User
-
-from flask_login import login_required
-
-import os
-
+# DASH IMPORTS
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
-import pandas as pd
 
-from data import load_data
+# FOLIUM IMPORTS
+import folium
+from folium.features import CustomIcon
+from folium.plugins import HeatMap
+
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
@@ -38,33 +35,23 @@ dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards'
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
 dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/bootswatch/2.3.2/united/bootstrap.min.css"})
-dash_app.css.append_css(
-    {'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
+dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
+dash_app.css.append_css({"external_url": "/static/styles/dashboard.css"})
 
 mlab_credentials_file = "../credentials/mlab_credentials.txt"
-DB_TWEETS = "twitter_happiness_test"
+#DB_TWEETS = "twitter_happiness_test"
+DB_TWEETS = "tweets"
 DB_LOCATIONS = "twitter_happiness_locations"
 DB_UP = False
-PROD_ENV = True
-PROD_ENV = False
 
 
 def db_connect():
     global DB_UP
-    global PROD_ENV
     global MONGO
     global flask_app
 
-    if PROD_ENV:
-        print("PROD environment")
-        name = os.environ["fooApp_DB_USERNAME"]
-        password = os.environ["fooApp_DB_PASS"]
-        url = os.environ["fooApp_DB_URL"]
-        dbname = os.environ["fooApp_DB_NAME"]
-    else:
-        print("DEV environment")
-        with open(mlab_credentials_file, 'r', encoding='utf-8') as f:
-            [name, password, url, dbname] = f.read().splitlines()
+    with open(mlab_credentials_file, 'r', encoding='utf-8') as f:
+        [name, password, url, dbname] = f.read().splitlines()
 
     try:
         # db_conn = pymongo.MongoClient("mongodb://{}:{}@{}/{}".format(name, password, url, dbname))
@@ -91,21 +78,25 @@ db_connect()
 flask_app.config['SECRET_KEY'] = 'enydM2ANhdcoKwdVa0jWvEsbPFuQpMjf'  # Create your own.
 flask_app.config['SESSION_PROTECTION'] = 'strong'
 
-# Use Flask-Login to track current user in Flask's session.
-login_manager = LoginManager()
-login_manager.setup_app(flask_app)
-login_manager.login_view = 'login'
-
 filtered_location = None
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    """Flask-Login hook to load a User instance from ID."""
-    u = MONGO.db.users.find_one({"username": user_id})
-    if not u:
-        return None
-    return User(u['username'])
+def dump_request_detail(request):
+    request_detail = """
+## Request INFO ##
+request.endpoint: {request.endpoint}
+request.method: {request.method}
+request.view_args: {request.view_args}
+request.args: {request.args}
+request.form: {request.form}
+request.user_agent: {request.user_agent}
+request.files: {request.files}
+request.is_xhr: {request.is_xhr}
+
+## request.headers ##
+{request.headers}
+    """.format(request=request).strip()
+    return request_detail
 
 
 @flask_app.before_request
@@ -132,49 +123,6 @@ def error_not_found(error):
     return render_template('error/not_found.html'), 404
 
 
-"""
-@flask_app.route('/db/', methods=['GET', 'POST'])
-def db_credentials():
-    #Provide HTML form to edit DB credentials.
-    form = DBCredentialsForm(request.form)
-    if request.method == 'POST' and form.validate():
-        with open(mlab_credentials_file, 'w', encoding='utf-8') as f:
-            f.write(form.data["credentials"])
-            print(form.data["credentials"])
-        db_connect()
-        return render_template('credentials/db_credentials_updated.html', db_status = str(DB_UP))
-    # Either first load or validation error at this point.
-    return render_template('credentials/db_credentials.html', form=form)
-"""
-
-
-@flask_app.route('/login/', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('products_list'))
-    form = LoginForm(request.form)
-    error = None
-    if request.method == 'POST' and form.validate():
-        username = form.username.data.lower().strip()
-        password = form.password.data.lower().strip()
-        user = MONGO.db.users.find_one({"username": form.username.data})
-        print(username)
-        # print(username, password)
-        if user and User.validate_login(form.password.data, user['password']):
-            user_obj = User(user['username'])
-            login_user(user_obj)
-            return redirect(url_for('products_list'))
-        else:
-            error = 'Incorrect username or password.'
-    return render_template('user/login.html', form=form, error=error)
-
-
-@flask_app.route('/logout/')
-def logout():
-    logout_user()
-    return redirect(url_for('products_list'))
-
-
 @flask_app.route('/')
 def index():
     # return render_template('index.html')
@@ -194,13 +142,6 @@ def tweets_list():
     return render_template('tweets/list.html', tweets=tweets)
 
 
-@flask_app.route('/tweets-map-old/')
-def tweets_map_old():
-    """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[DB_TWEETS].find()[30:50]
-    return render_template('tweets/list.html', tweets=tweets)
-
-
 @flask_app.route('/about-us/')
 def about_us():
     """Provide HTML listing of all Tweets."""
@@ -208,107 +149,254 @@ def about_us():
     return render_template('tweets/list.html', tweets=tweets)
 
 
-@flask_app.route('/products/')
-def products_list():
-    # return 'Listing of all products we have.'
-    """Provide HTML listing of all Products."""
-    # Query: Get all Products objects, sorted by date.
-    products = MONGO.db.products.find()[:]
-    return render_template('product/index.html', products=products)
+def select_custom_emoji(root_url, sentiment):
+    # https://emojipedia.org/whatsapp/
+    if sentiment == -2:
+        return folium.features.CustomIcon(root_url+"static/emoji_-2.png", icon_size=(15, 15))
+    elif sentiment == -1:
+        return folium.features.CustomIcon(root_url +"static/emoji_-1.png", icon_size=(15, 15))
+    elif sentiment == 1:
+        return folium.features.CustomIcon(root_url +"static/emoji_1.png", icon_size=(15, 15))
+    elif sentiment == 2:
+        return folium.features.CustomIcon(root_url +"static/emoji_2.png", icon_size=(15, 15))
+    else:
+        return folium.features.CustomIcon(root_url + "static/emoji_0.png", icon_size=(15, 15))
 
 
-@flask_app.route('/products/create/', methods=['GET', 'POST'])
-@login_required
-def product_create():
-    # return 'Form to create a new product.'
-    """Provide HTML form to create a new product."""
-    form = ProductForm(request.form)
-    if request.method == 'POST' and form.validate():
-        MONGO.db.products.insert_one(form.data)
-        # Success. Send user back to full product list.
-        return redirect(url_for('products_list'))
-    # Either first load or validation error at this point.
-    return render_template('product/create.html', form=form)
+def select_custom_icon(root_url, sentiment):
+    if sentiment < 0:
+        return folium.features.CustomIcon(root_url+"static/icon_sad.png", icon_size=(15, 15))
+    elif sentiment > 0:
+        return folium.features.CustomIcon(root_url+"static/icon_happy.png", icon_size=(15, 15))
+    else:
+        return folium.features.CustomIcon(root_url+"static/icon_neutral.png", icon_size=(15, 15))
 
 
-@flask_app.route('/products/<product_id>/')
-def product_detail(product_id):
-    # return 'Detail of product     #{}.'.format(product_id)
-    """Provide HTML page with a given product."""
-    # Query: get Product object by ID.
-    product = MONGO.db.products.find_one({"_id": ObjectId(product_id)})
-    print(product)
-    if product is None:
-        # Abort with Not Found.
-        abort(404)
-    return render_template('product/detail.html',
-                           product=product)  # this is the controler, linking view (template) and model (data, product)
+@flask_app.route('/tweets-map-icons/')
+def tweets_map_icons():
+    root_url = request.url_root
+
+    location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    tweets = [tweet for tweet in tweets]
+
+    m = folium.Map(
+        location=[location["lat_center"], location["lon_center"]],
+        tiles='CartoDB positron',  # 'CartoDB dark_matter', 'OpenStreetMap'
+        zoom_start=12
+    )
+
+    for tweet in tweets:
+        m.add_child(folium.Marker(
+            location=[tweet['lat'], tweet['lon']],
+            #icon=select_custom_emoji(root_url, tweet["class"]),
+            icon=select_custom_icon(root_url, tweet["class"]),
+            popup=folium.Popup(tweet['text'])
+        ))
+
+    m.save('maps/map_icons.html')
+    #with open('map.html') as f:
+    #    map_html = f.read()
+    #print(map_html)
+    map_html = m.get_root().render()
+
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                    <div class="navbar navbar-static-top" >
+                    <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                        <div class="container">
+                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                            <ul class="nav">
+                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''')
+        ]),
+
+        html.Div([
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
+
+            #dash_dangerously_set_inner_html.DangerouslySetInnerHTML(map_html)
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
 
 
-@flask_app.route('/products/<product_id>/edit/', methods=['GET', 'POST'])
-@login_required
-def product_edit(product_id):
-    # return 'Form to edit product #.'.format(product_id)
-    """Provide HTML form to edit an existing product."""
-    product = MONGO.db.products.find_one({"_id": ObjectId(product_id)})
-    form = ProductForm(request.form)
-    if request.method == 'POST' and form.validate():
-        MONGO.db.products.replace_one({'_id': ObjectId(product_id)}, form.data)
-        # Success. Send user back to full product list.
-        return redirect(url_for('products_list'))
-    # Either first load or validation error at this point.
-    return render_template('product/edit.html', form=form, product=product)
+@flask_app.route('/tweets-map-emojis/')
+def tweets_map_emojis():
+    root_url = request.url_root
+
+    location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
+
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    tweets = [tweet for tweet in tweets]
+
+    m = folium.Map(
+        location=[location["lat_center"], location["lon_center"]],
+        tiles='CartoDB positron',  # 'CartoDB dark_matter', 'OpenStreetMap'
+        zoom_start=12
+    )
+
+    for tweet in tweets:
+        m.add_child(folium.Marker(
+            location=[tweet['lat'], tweet['lon']],
+            icon=select_custom_emoji(root_url, tweet["class"]),
+            popup=folium.Popup(tweet['text'])
+        ))
+
+    m.save('maps/map_emojis.html')
+    #with open('map.html') as f:
+    #    map_html = f.read()
+    #print(map_html)
+    map_html = m.get_root().render()
+
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                    <div class="navbar navbar-static-top" >
+                    <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                        <div class="container">
+                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                            <ul class="nav">
+                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''')
+        ]),
+
+        html.Div([
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
+
+            #dash_dangerously_set_inner_html.DangerouslySetInnerHTML(map_html)
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
 
 
-@flask_app.route('/products/<product_id>/delete/', methods=['DELETE'])
-@login_required
-def product_delete(product_id):
-    # raise NotImplementedError('DELETE')
-    """Delete record using HTTP DELETE, respond with JSON."""
-    result = MONGO.db.products.delete_one({"_id": ObjectId(product_id)})
-    if result.deleted_count == 0:
-        # Abort with Not Found, but with simple JSON response.
-        response = jsonify({'status': 'Not Found'})
-        response.status = 404
-        return response
-    return jsonify({'status': 'OK'})
+@flask_app.route('/tweets-map-heatmap/')
+def tweets_map_heatmap():
 
+    location = MONGO.db[DB_LOCATIONS].find({"name": "Barcelona"})[0]
+    location_query = {
+        "lat": {
+            "$gt": location["lat_min"],
+            "$lt": location["lat_max"]
+        },
+        "lon": {
+            "$gt": location["lon_min"],
+            "$lt": location["lon_max"]
+        }
+    }
 
-@flask_app.route('/string/')
-def return_string():
-    dump = dump_request_detail(request)
-    return 'Hello, world!'
+    tweets = MONGO.db[DB_TWEETS].find(location_query)[:100]
+    data = [[tweet['lat'],tweet['lon'],tweet["class"]] for tweet in tweets]
 
+    m = folium.Map(
+        # http://python-visualization.github.io/folium/docs-v0.5.0/plugins.html
+        location=[location["lat_center"], location["lon_center"]],
+        tiles='CartoDB positron', #'stamentoner',
+        zoom_start=12
+    )
 
-@flask_app.route('/object/')
-def return_object():
-    dump = dump_request_detail(request)
-    headers = {'Content-Type': 'text/plain'}
-    return make_response(Response('Hello, world! \n' + dump, status=200, headers=headers))
+    HeatMap(data).add_to(m)
 
+    m.save('maps/map_heatmap.html')
+    #with open('map.html') as f:
+    #    map_html = f.read()
+    #print(map_html)
+    map_html = m.get_root().render()
 
-@flask_app.route('/tuple/<path:resource>')
-def return_tuple(resource):
-    dump = dump_request_detail(request)
-    return 'Hello, world! \n' + dump, 200, {'Content-Type': 'text/plain'}
+    dash_app.layout = html.Div([
 
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                    <div class="navbar navbar-static-top" >
+                    <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
+                        <div class="container">
+                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                            <ul class="nav">
+                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
+                            </ul>
+                            <ul class="nav pull-right">
+                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                ''')
+        ]),
 
-def dump_request_detail(request):
-    request_detail = """
-## Request INFO ##
-request.endpoint: {request.endpoint}
-request.method: {request.method}
-request.view_args: {request.view_args}
-request.args: {request.args}
-request.form: {request.form}
-request.user_agent: {request.user_agent}
-request.files: {request.files}
-request.is_xhr: {request.is_xhr}
+        html.Div([
 
-## request.headers ##
-{request.headers}
-    """.format(request=request).strip()
-    return request_detail
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Iframe(id='map', srcDoc=map_html, width='100%', height='600'), # open('map.html', 'r').read()
+
+            #dash_dangerously_set_inner_html.DangerouslySetInnerHTML(map_html)
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
 
 
 @flask_app.route('/tweets-map/')
@@ -322,9 +410,14 @@ def tweets_map():
         location = request.args['location']
     except:
         pass
-    if location == None:
+    if location is None:
         location = locations[0]["name"]
-    print(location)
+    #print(location)
+
+    days_history = 6
+    days_markers = {}
+    for i in range(-days_history, 1):
+        days_markers[i] = datetime.datetime.strftime(datetime.datetime.today() + datetime.timedelta(days=i), "%d-%m-%Y")
 
     dash_app.layout = html.Div([
 
@@ -336,11 +429,10 @@ def tweets_map():
                         <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
                         <ul class="nav">
                             <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
-                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
-                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>                            
                         </ul>
                         <ul class="nav pull-right">
-                            <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
+                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
                         </ul>
                     </div>
                 </div>
@@ -362,6 +454,17 @@ def tweets_map():
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
             html.Div([
+                dcc.RangeSlider(
+                    id='date-slider',
+                    min=-days_history,
+                    max=0,
+                    marks=days_markers,
+                    value=[-days_history, 0]
+                )], style={'width': '80%', 'margin': 'auto'}),
+
+            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
+
+            html.Div([
                 html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
                 html.Div(style={'width': '5%', 'display': 'inline-block'}),
                 html.Div(
@@ -372,6 +475,8 @@ def tweets_map():
             ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
+
+            html.Div(id='selected-tweet')
         ],
             style={'width': '80%', 'margin': 'auto'}
         )
@@ -417,28 +522,38 @@ def update_tweets_list(location_filter):
 @dash_app.callback(
     dash.dependencies.Output('tweets-map', 'figure'),
     [
-        dash.dependencies.Input('locations-filter', 'value')
+        dash.dependencies.Input('locations-filter', 'value'),
+        dash.dependencies.Input('date-slider', 'value')
     ]
 )
-def update_tweets_map(location_filter):
+def update_tweets_map(location_filter, date_filter):
+
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
 
+    min_day = datetime.datetime.today().replace(hour=00, minute=00, second=00) + datetime.timedelta(days=date_filter[0])
+    max_day = datetime.datetime.today().replace(hour=23, minute=59, second=59) + datetime.timedelta(days=date_filter[1])
+    #print(min_day, ' - ', max_day)
+
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
-    # print(location)
+    #print(location)
 
     location_query = {
         "lat": {
-            "$gt": location["lat_min"],
-            "$lt": location["lat_max"]
+            "$gte": location["lat_min"],
+            "$lte": location["lat_max"]
         },
         "lon": {
-            "$gt": location["lon_min"],
-            "$lt": location["lon_max"]
+            "$gte": location["lon_min"],
+            "$lte": location["lon_max"]
+        },
+        "datetime": {
+            "$gte": min_day,
+            "$lte": max_day,
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:300]
+    tweets = MONGO.db[DB_TWEETS].find(location_query) #[:300]
 
-    sent_class_color = {
+    sentiment_class_colors = {
         -2: "rgb(255, 0, 0)",
         -1: "rgb(255, 102, 0)",
         0: "rgb(255, 255, 0)",
@@ -453,11 +568,13 @@ def update_tweets_map(location_filter):
     for tweet in tweets:
         lats.append(tweet["lat"])
         lons.append(tweet["lon"])
-        texts.append(tweet["text"])
-        sent_class = tweet["class"]
-        colors.append(sent_class_color[sent_class])
+        texts.append(
+            "<br>".join(textwrap.wrap(tweet["text"],50)) + "<br><i>" + datetime.datetime.strftime(tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>"
+        )
+        sentiment_class = tweet["class"]
+        colors.append(sentiment_class_colors[sentiment_class])
 
-    print(len(lats), "tweets loaded")
+    #print(len(lats), "tweets loaded")
 
     data = [
         go.Scattermapbox(
@@ -465,299 +582,51 @@ def update_tweets_map(location_filter):
             lon=lons,
             mode='markers',
             marker=dict(
-                #symbol="square",
+                # symbol="square",
                 size=14,
                 color=colors,
             ),
             text=texts,
-            hoverinfo='text'
+            hoverinfo='text'  # 'name + x + y + text'
         )
     ]
 
     layout = go.Layout(
         autosize=True,
-        height=800,
+        height=600,
         hovermode='closest',
         mapbox=dict(
             accesstoken=mapbox_access_token,
             bearing=0,
             center=dict(
-                lat=(location["lat_min"] + location["lat_max"]) / 2,
-                lon=(location["lon_min"] + location["lon_max"]) / 2
+                lat=location["lat_center"],
+                lon=location["lon_center"]
             ),
             pitch=0,
             zoom=10
         ),
+        margin={
+            'l': 0,
+            'r': 0,
+            'b': 0,
+            't': 0
+        },
     )
 
     map1 = dict(data=data, layout=layout)
 
-    '''layout = dict(
-        autosize=True,
-        
-        font=dict(color='#CCCCCC'),
-        titlefont=dict(color='#CCCCCC', size='14'),
-        margin=dict(
-            l=35,
-            r=35,
-            b=35,
-            t=45
-        ),
-        hovermode="closest",
-        plot_bgcolor="#191A1A",
-        paper_bgcolor="#020202",
-        legend=dict(font=dict(size=10), orientation='h'),
-        title='Satellite Overview',
-        mapbox=dict(
-            accesstoken=mapbox_access_token,
-            style="dark",
-            center=dict(
-                lon=41.408366,
-                lat=2.137533,
-                zoom = 7
-            )
-        )
-    )
-    trace = dict(
-        type='scattermapbox',
-        lon=[41.408366, 41.407288],
-        lat=[2.137533, 2.138364],
-        text='Well_Name',
-        name='well_type',
-        marker=dict(
-            size=4,
-            opacity=0.8,
-            color='blue'
-        )
-    )
-    map1 = dict(data=trace, layout=layout)'''
-
     return map1
 
 
-data = load_data()
-
-
-@flask_app.route('/dashboards/eurostat')
-def dashboard_eurostat():
-    global dash_app
-
-    available_indicators = data['NA_ITEM'].sort_values(ascending=[True]).unique()
-    countries_flg = data["Country"].sort_values(ascending=[True]).unique()
-    years = data['TIME']
-
-    dash_app.layout = html.Div([
-
-        html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
-
-        html.H1(children='Eurostat Dashboard', style={'margin': 'auto'}),
-
-        html.Div(style={'padding-top': '10px', 'padding-bottom': '15px'}),
-
-        html.Div([
-
-            html.Div([
-
-                html.Div([
-                    dcc.Dropdown(
-                        id='xaxis-column-1',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value=available_indicators[0]
-                    ),
-                    html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
-                    dcc.RadioItems(
-                        id='xaxis-type-1',
-                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                        value='Linear',
-                        labelStyle={'display': 'inline-block'}
-                    )
-                ], style={'width': '48%', 'display': 'inline-block'}),
-
-                html.Div([
-                    dcc.Dropdown(
-                        id='yaxis-column-1',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value=available_indicators[1]
-                    ),
-                    html.Div(style={'padding-top': '5px', 'padding-bottom': '5px'}),
-                    dcc.RadioItems(
-                        id='yaxis-type-1',
-                        options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                        value='Linear',
-                        labelStyle={'display': 'inline-block'}
-                    )
-                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-
-            ]),
-
-            html.Div(style={'padding-top': '10px', 'padding-bottom': '20px'}),
-
-            dcc.Slider(
-                id='year-slider-1',
-                min=years.min(),
-                max=years.max(),
-                value=years.max(),
-                step=None,
-                marks={str(year): str(year) for year in years.unique()}
-            ),
-
-            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-            dcc.Graph(id='indicator-graphic-1')
-
-        ]),
-
-        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-        html.Hr(),
-
-        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-        html.Div([
-
-            html.Div([
-
-                dcc.RadioItems(
-                    id='countries-flg',
-                    options=[{'label': i, 'value': i} for i in countries_flg],
-                    value=countries_flg[0]
-                ),
-
-                html.Div([
-                    dcc.Dropdown(
-                        id='countries-2',
-                        multi=True
-                    ),
-                ], style={'width': '48%', 'display': 'inline-block'}),
-
-                html.Div([
-                    dcc.Dropdown(
-                        id='yaxis-column-2',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value="Exports of goods"  # available_indicators[0]
-                    ),
-                ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-
-            ]),
-
-            html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
-
-            dcc.Graph(id='indicator-graphic-2')
-
-        ]),
-
-        html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'})
-
-    ],
-        style={'width': '80%', 'margin': 'auto'}
-    )
-
-    return dash_app.index()
-
-
 @dash_app.callback(
-    dash.dependencies.Output('indicator-graphic-1', 'figure'),
+    dash.dependencies.Output('selected-tweet', 'children'),
     [
-        dash.dependencies.Input('xaxis-column-1', 'value'),
-        dash.dependencies.Input('yaxis-column-1', 'value'),
-        dash.dependencies.Input('xaxis-type-1', 'value'),
-        dash.dependencies.Input('yaxis-type-1', 'value'),
-        dash.dependencies.Input('year-slider-1', 'value')
+        dash.dependencies.Input('tweets-map', 'hoverData')
     ]
 )
-def update_graph_1(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_value):
-    dff = data[data['TIME'] == year_value]
-
-    graph1 = {
-        'data': [go.Scatter(
-            x=dff[dff['NA_ITEM'] == xaxis_column_name]['Value'],
-            y=dff[dff['NA_ITEM'] == yaxis_column_name]['Value'],
-            text=dff[dff['NA_ITEM'] == yaxis_column_name]['GEO'],
-            mode='markers',
-            marker={
-                'size': 15,
-                'opacity': 0.5,
-                'line': {'width': 0.5, 'color': 'white'}
-            }
-        )],
-        'layout': go.Layout(
-            xaxis={
-                'title': xaxis_column_name,
-                'type': 'linear' if xaxis_type == 'Linear' else 'log'
-            },
-            yaxis={
-                'title': yaxis_column_name,
-                'type': 'linear' if yaxis_type == 'Linear' else 'log'
-            },
-            margin={'l': 60, 'b': 50, 't': 10, 'r': 0},
-            hovermode='closest'
-        )
-    }
-
-    return graph1
-
-
-@dash_app.callback(
-    dash.dependencies.Output('countries-2', 'options'),
-    [dash.dependencies.Input('countries-flg', 'value')])
-def set_countries_options(country_flg):
-    available_countries = data[data["Country"] == country_flg]["GEO"].sort_values(ascending=[True]).unique()
-    return [{'label': i, 'value': i} for i in available_countries]
-
-
-@dash_app.callback(
-    dash.dependencies.Output('countries-2', 'value'),
-    [dash.dependencies.Input('countries-2', 'options')])
-def set_countries_value(available_options):
-    return [available_options[i]['value'] for i in range(0, 1)]
-
-
-@dash_app.callback(
-    dash.dependencies.Output('indicator-graphic-2', 'figure'),
-    [
-        dash.dependencies.Input('countries-2', 'value'),
-        dash.dependencies.Input('yaxis-column-2', 'value')
-    ]
-)
-def update_graph_2(countries, yaxis_column_name):
-    data_lines = []
-
-    years = data['TIME']
-    for country in countries:
-        dff = data[(data['GEO'] == country) & (data['NA_ITEM'] == yaxis_column_name)]
-        data_lines.append(
-            go.Scatter(
-                x=dff["TIME"],
-                y=dff['Value'],
-                text=country,
-                mode='lines+markers',
-                name=country,
-                marker={
-                    'size': 10,
-                    'opacity': 0.8,
-                    'line': {'width': 0.4}
-                }
-            )
-        )
-
-    graph2 = {
-        'data': data_lines,
-        'layout': go.Layout(
-            xaxis={
-                'title': 'YEAR',
-                'tick0': years.min() - 1,
-                'dtick': 1,
-                'range': [years.min() - 1, years.max() + 1]
-            },
-            yaxis={
-                'title': yaxis_column_name
-            },
-            margin={'l': 60, 'b': 50, 't': 10, 'r': 0},
-            hovermode='closest'
-        )
-    }
-
-    return graph2
+def display_data(hover_point):
+    #print(hover_point)
+    return json.dumps(hover_point, indent=2)
 
 
 if __name__ == '__main__':
