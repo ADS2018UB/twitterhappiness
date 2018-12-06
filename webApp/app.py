@@ -641,7 +641,7 @@ def update_tweets_map(location_filter, map_type, date_filter):
                 icon=select_custom_twitter(root_url, tweet["class"]),
                 popup=folium.Popup(tweet['text'])
             ))
-        m.save('maps/map_emojis.html')
+        #m.save('maps/map_emojis.html')
         map_html = m.get_root().render()
         return html.Iframe(id='tweets-map-icons', srcDoc=map_html, width='100%', height='600')
 
@@ -654,7 +654,7 @@ def update_tweets_map(location_filter, map_type, date_filter):
             zoom_start=12
         )
         HeatMap(data).add_to(m)
-        m.save('maps/map_heatmap.html')
+        #m.save('maps/map_heatmap.html')
         map_html = m.get_root().render()
         return html.Iframe(id='tweets-map-heatmap', srcDoc=map_html, width='100%', height='600')
 
