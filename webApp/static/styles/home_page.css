@@ -1,3 +1,25 @@
+
+body {
+  font: 16px Arial;
+  background-image: url("/static/background/image2.jpg");
+  /*background-position: center;*/
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-color: rgba(255,255,255,0.6);
+  background-blend-mode: lighten;
+  /*background-color: #cccccc;*/
+}
+
+.navbar-inner {
+    background-image: none !important;
+    background-color: rgb(29, 161, 242) !important;
+    border: none !important
+}
+
+a:hover {
+    background-color: rgb(65, 176, 245) !important;
+}
+
 .homepage-title {
     color: rgb(29, 161, 242);
     font-size: 60px;
@@ -11,9 +33,6 @@
   box-sizing: border-box;
 }
 
-body {
-  font: 16px Arial;
-}
 
 .autocomplete {
   /*the container must be positioned relative:*/

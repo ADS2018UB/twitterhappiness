@@ -1,6 +1,0 @@
-*.pyc
-__pycache__
-credentials.txt
-credentials_dummy.txt
-.idea/*
-Dockerfile

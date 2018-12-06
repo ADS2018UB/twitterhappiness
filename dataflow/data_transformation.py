@@ -28,9 +28,12 @@ def analyze(data):
         elem['sentiment'] = sentiment
         elem['class'] = decide_class(sentiment)
 
-        # Format the datetime field
-        date_str = elem['created_at']
-        date_obj = datetime.datetime.strptime(date_str, '%a %b %d %H:%M:%S %z %Y')
-        elem['datetime'] = datetime.datetime.combine(date_obj.date(), date_obj.time())
+        # populate lat, lon fields
+        if elem["coordinates"] is not None and elem["coordinates"]["type"] == "Point":
+            elem['lat'] = elem["coordinates"]["coordinates"][1]
+            elem['lon'] = elem["coordinates"]["coordinates"][0]
+        else:
+            elem['lat'] = None
+            elem['lon'] = None
 
     return data
