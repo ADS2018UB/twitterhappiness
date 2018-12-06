@@ -5,7 +5,7 @@ from flask_pymongo import PyMongo
 
 from flask import abort, jsonify, redirect, render_template
 from flask import request, url_for
-from .forms import ProductForm
+from forms import ProductForm
 
 import json
 from bson.objectid import ObjectId
@@ -14,8 +14,8 @@ import bson
 from flask_login import LoginManager, current_user
 from flask_login import login_user, logout_user
 
-from .forms import LoginForm
-from .models import User
+from forms import LoginForm
+from models import User
 
 from flask_login import login_required
 
@@ -29,7 +29,7 @@ import plotly.graph_objs as go
 import pandas as pd
 import datetime
 
-from .data import load_data
+from data import load_data
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
