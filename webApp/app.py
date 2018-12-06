@@ -424,28 +424,7 @@ def tweets_map():
     dash_app.layout = html.Div([
 
         html.Div([
-<<<<<<< HEAD
-            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
-                <div class="navbar navbar-static-top" >
-                <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
-                    <div class="container">
-                        <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
-                        <ul class="nav">
-                            <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
-                            <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
-                            <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
-                            <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
-                        </ul>
-                        <ul class="nav pull-right">
-                            <li><a href="{{ url_for('login') }}" style="text-shadow: none;">Login</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            ''')
-=======
             dash_dangerously_set_inner_html.DangerouslySetInnerHTML(DASHBOARD_HEADER_HTML)
->>>>>>> 38-US23-web-refactor
         ]),
 
         html.Div([
