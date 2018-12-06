@@ -20,11 +20,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_dangerously_set_inner_html
 import plotly.graph_objs as go
-<<<<<<< HEAD
 import pandas as pd
 import datetime
-=======
->>>>>>> 38-US23-web-refactor
 
 # FOLIUM IMPORTS
 import folium
