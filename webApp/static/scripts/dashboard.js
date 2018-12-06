@@ -12,4 +12,4 @@ function scroll_to_tweet(id) {
 $("body").on('DOMSubtreeModified', "#selected-tweet", function() { // when there is a new tweet selected
     var tweet_id = $("#selected-tweet").text();
     scroll_to_tweet(tweet_id); // launch the function for the id in the div
-});
+});d
