@@ -479,10 +479,10 @@ def tweets_map():
             html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
 
             html.Div([
-                html.Div(dcc.Graph(id='tweets-map'), style={'width': '60%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(id='tweets-map'), style={'width': '65%', 'display': 'inline-block'}),
                 html.Div(style={'width': '3%', 'display': 'inline-block'}),
-                html.Div(id='tweets-list', style={'width': '35%', 'display': 'inline-block'})
-            ], style={'max-height': '600px'}),
+                html.Div(id='tweets-list', style={'width': '30%', 'display': 'inline-block'})
+            ]),
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
@@ -490,7 +490,7 @@ def tweets_map():
 
             html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
         ],
-            style={'width': '80%', 'margin': 'auto'}
+            style={'width': '90%', 'margin': 'auto'}
         )
 
     ])
