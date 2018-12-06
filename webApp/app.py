@@ -464,8 +464,8 @@ def tweets_map():
                         min=-days_history,
                         max=0,
                         marks=days_markers,
-                        #value=[-days_history, 0]
-                        value=[-5, -3]
+                        value=[-days_history, 0],
+                        #value=[-5, -3]
                     )], style={'width': '100%', 'margin': 'auto'}
                 ),
             ], id='filters-menu', style={'width': '70%', 'margin': 'auto'}),
