@@ -34,9 +34,14 @@ flask_app = Flask(__name__)
 dash_app = dash.Dash(__name__, server=flask_app, url_base_pathname='/dashboards')
 dash_app.config.suppress_callback_exceptions = True
 dash_app.layout = html.Div()
+
 dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/bootswatch/2.3.2/united/bootstrap.min.css"})
 dash_app.css.append_css({'external_url': "https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css"})
 dash_app.css.append_css({"external_url": "/static/styles/dashboard.css"})
+
+dash_app.scripts.append_script({"external_url": "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"})
+dash_app.scripts.append_script({"external_url": "/static/scripts/dashboard.js"})
+
 
 mlab_credentials_file = "../credentials/mlab_credentials.txt"
 #DB_TWEETS = "twitter_happiness_test"
@@ -171,6 +176,14 @@ def select_custom_icon(root_url, sentiment):
     else:
         return folium.features.CustomIcon(root_url+"static/icon_neutral.png", icon_size=(15, 15))
 
+
+sentiment_class_colors = {
+        -2: "rgb(255, 0, 0)",
+        -1: "rgb(255, 102, 0)",
+        0: "rgb(255, 255, 0)",
+        1: "rgb(153, 255, 51)",
+        2: "rgb(0, 255, 0)",
+    }
 
 @flask_app.route('/tweets-map-icons/')
 def tweets_map_icons():
@@ -460,23 +473,22 @@ def tweets_map():
                     max=0,
                     marks=days_markers,
                     value=[-days_history, 0]
+                    #value = [-4,-2]
                 )], style={'width': '80%', 'margin': 'auto'}),
 
             html.Div(style={'padding-top': '20px', 'padding-bottom': '20px'}),
 
             html.Div([
-                html.Div(dcc.Graph(id='tweets-map'), style={'width': '75%', 'display': 'inline-block'}),
-                html.Div(style={'width': '5%', 'display': 'inline-block'}),
-                html.Div(
-                    id='tweets-list', style={'width': '19%', 'display': 'inline-block', 'vertical-align': 'top',
-                                             'padding-top': '105px', 'line-height': '200%', 'position': 'static',
-                                             'overflow': 'auto', 'white-space': 'pre-line', 'min-height': '100px',
-                                             'max-height': '600px', 'border': '1px solid #FFFFFF'})
-            ]),
+                html.Div(dcc.Graph(id='tweets-map'), style={'width': '60%', 'display': 'inline-block'}),
+                html.Div(style={'width': '3%', 'display': 'inline-block'}),
+                html.Div(id='tweets-list', style={'width': '35%', 'display': 'inline-block'})
+            ], style={'max-height': '600px'}),
 
-            html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
-            html.Div(id='selected-tweet')
+            html.Div(id='selected-tweet'),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
         ],
             style={'width': '80%', 'margin': 'auto'}
         )
@@ -489,33 +501,44 @@ def tweets_map():
 @dash_app.callback(
     dash.dependencies.Output('tweets-list', 'children'),
     [
-        dash.dependencies.Input('locations-filter', 'value')
+        dash.dependencies.Input('locations-filter', 'value'),
+        dash.dependencies.Input('date-slider', 'value')
     ]
 )
-def update_tweets_list(location_filter):
+def update_tweets_list(location_filter, date_filter):
+
+    min_day = datetime.datetime.today().replace(hour=00, minute=00, second=00) + datetime.timedelta(days=date_filter[0])
+    max_day = datetime.datetime.today().replace(hour=23, minute=59, second=59) + datetime.timedelta(days=date_filter[1])
+    #print(min_day, ' - ', max_day)
+
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
-    # print(location)
+    #print(location)
 
     location_query = {
         "lat": {
-            "$gt": location["lat_min"],
-            "$lt": location["lat_max"]
+            "$gte": location["lat_min"],
+            "$lte": location["lat_max"]
         },
         "lon": {
-            "$gt": location["lon_min"],
-            "$lt": location["lon_max"]
+            "$gte": location["lon_min"],
+            "$lte": location["lon_max"]
+        },
+        "datetime": {
+            "$gte": min_day,
+            "$lte": max_day,
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)[:20]
+    tweets = MONGO.db[DB_TWEETS].find(location_query)  # [:300]
 
-    html_content = '<div class="tweets-scrolling-box" > '
+    #tweets_list = [tweet for tweet in tweets]
+    #html_content = '<div class="tweets-scrolling-box" > '
+    html_content = ''
     for tweet in tweets:
         # {white-space: pre-line;}
-        html_content += '<div>' + tweet['text'] + '</div>'
-    html_content = ''.join([html_content, '</div>'])
+        html_content += '<div id="' + tweet["id_str"] +'"class="tweet" style="background-color:' + sentiment_class_colors[tweet["class"]] + '";>' + tweet['text'] + '</div>'
+    #html_content = ''.join([html_content, '</div>'])
 
-    content = html.Div(
-        dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content))
+    content = dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content)
     return content
 
 
@@ -553,41 +576,36 @@ def update_tweets_map(location_filter, date_filter):
     }
     tweets = MONGO.db[DB_TWEETS].find(location_query) #[:300]
 
-    sentiment_class_colors = {
-        -2: "rgb(255, 0, 0)",
-        -1: "rgb(255, 102, 0)",
-        0: "rgb(255, 255, 0)",
-        1: "rgb(153, 255, 51)",
-        2: "rgb(0, 255, 0)",
-    }
-
-    lats = []
-    lons = []
-    texts = []
-    colors = []
+    tweets_ids = []
+    tweets_lats = []
+    tweets_lons = []
+    tweets_texts = []
+    tweets_colors = []
     for tweet in tweets:
-        lats.append(tweet["lat"])
-        lons.append(tweet["lon"])
-        texts.append(
+        tweets_ids.append(tweet["id_str"])
+        tweets_lats.append(tweet["lat"])
+        tweets_lons.append(tweet["lon"])
+        tweets_texts.append(
             "<br>".join(textwrap.wrap(tweet["text"],50)) + "<br><i>" + datetime.datetime.strftime(tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>"
         )
         sentiment_class = tweet["class"]
-        colors.append(sentiment_class_colors[sentiment_class])
+        tweets_colors.append(sentiment_class_colors[sentiment_class])
 
     #print(len(lats), "tweets loaded")
 
     data = [
         go.Scattermapbox(
-            lat=lats,
-            lon=lons,
+            customdata=tweets_ids,
+            lat=tweets_lats,
+            lon=tweets_lons,
             mode='markers',
             marker=dict(
                 # symbol="square",
                 size=14,
-                color=colors,
+                color=tweets_colors,
             ),
-            text=texts,
-            hoverinfo='text'  # 'name + x + y + text'
+            text=tweets_texts,
+            hoverinfo='text'  # 'name + x + y + text',
         )
     ]
 
@@ -624,9 +642,11 @@ def update_tweets_map(location_filter, date_filter):
         dash.dependencies.Input('tweets-map', 'hoverData')
     ]
 )
-def display_data(hover_point):
-    #print(hover_point)
-    return json.dumps(hover_point, indent=2)
+def map_data_hover(hover_point):
+    if hover_point is None:
+        return
+    hover_tweet_id = hover_point['points'][0]["customdata"]
+    return hover_tweet_id
 
 
 if __name__ == '__main__':
