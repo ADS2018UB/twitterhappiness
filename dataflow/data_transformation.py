@@ -103,9 +103,9 @@ def cluster_tweets(data_batch):
 
     ## Lets analyze the clusters
     # Note: Uncomment (delete #) to see results. Comment (add #) to not see results on screen/IO.
-    show_cluster_results(tweets_proc_pd_norm_filt)
-    print(tweets_proc_pd_norm_filt[clmns].groupby(['clusters']).mean())
-    print(tweets_proc_pd_norm_filt)
+    # show_cluster_results(tweets_proc_pd_norm_filt)
+    # print(tweets_proc_pd_norm_filt[clmns].groupby(['clusters']).mean())
+    # print(tweets_proc_pd_norm_filt)
 
     return data_batch
 
