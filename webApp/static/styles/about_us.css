@@ -1,55 +1,32 @@
 
 .about-us-title {
+    color: rgb(29, 161, 242);
+    font-size: 60px;
+    text-align: center;
+    font-weight: bold;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.about-us-container {
+    max-width: 100%;
+    margin: auto;
 
 }
 
 .about-us-box {
-
-}
-
-
-.rc-slider-track {
-    background-color: rgb(29, 161, 242);
-}
-
-.rc-slider-handle {
-    border: solid 2px rgb(29, 161, 242);
-}
-
-.rc-slider-dot-active {
-    border: solid 2px rgb(29, 161, 242);
-}
-
-#tweets-list {
-    vertical-align: top;
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    line-height: 150%;
-    position: static;
-    overflow: auto;
-    white-space: pre-line;
-    min-height: 100px;
-    max-height: 590px;
+    width: 200px;
+    margin: 20px;
+    display: inline-block;
     border: 1px solid rgb(153, 153, 153);
-    border-radius: 15px;
+    border-radius: 5px;
 }
 
-#selected-tweet {
-    display: none;
+table {
+    width: 100%;
 }
 
-.tweet {
-    border: solid 1px #CCC;
-    border-radius: 10px;
-    margin: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-}
-
-div.hover-tweet {
-    border: solid 3px rgb(100, 100, 100);
+td, th {
+    text-align: center;
+    padding: 8px;
 }
