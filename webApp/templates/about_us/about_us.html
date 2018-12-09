@@ -12,7 +12,7 @@
   </div>
 
   {% for detail in details %}
-  <div> {{ detail(tweet, show_sentiment_icon=true) }} </div>
+  <div> {{ detail["name"] }} </div>
   {% endfor %}
 
 {% endblock main %}
