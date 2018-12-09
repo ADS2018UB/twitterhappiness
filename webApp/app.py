@@ -29,7 +29,7 @@ from folium.features import CustomIcon
 from folium.plugins import HeatMap
 
 # ABOUT US IMPORTS
-import abous_us
+import about_us_details
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
@@ -154,7 +154,7 @@ def tweets_list():
 
 @flask_app.route('/about-us/')
 def about_us():
-    return render_template('about_us/about_us.html', details=about_us.details)
+    return render_template('about_us/about_us.html', details=about_us_details.DETAILS)
 
 
 @flask_app.route('/tweets-tl/')

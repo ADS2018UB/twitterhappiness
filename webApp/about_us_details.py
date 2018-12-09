@@ -1,5 +1,5 @@
 
-details = [
+DETAILS = [
     {
         "name": "dummy",
         "email": "dummy",
