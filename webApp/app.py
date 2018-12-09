@@ -28,6 +28,8 @@ import folium
 from folium.features import CustomIcon
 from folium.plugins import HeatMap
 
+# ABOUT US IMPORTS
+import abous_us
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
@@ -152,9 +154,8 @@ def tweets_list():
 
 @flask_app.route('/about-us/')
 def about_us():
-    """Provide HTML listing of all Tweets."""
-    tweets = MONGO.db[DB_TWEETS].find()[50:60]
-    return render_template('tweets/list.html', tweets=tweets)
+    return render_template('about_us/about_us.html', details=about_us.details)
+
 
 @flask_app.route('/tweets-tl/')
 def tweets_tl():
