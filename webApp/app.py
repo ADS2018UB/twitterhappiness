@@ -157,6 +157,27 @@ def about_us():
     return render_template('about_us/about_us.html', details=about_us_details.DETAILS)
 
 
+# DASHBOARD COMPONENTS
+
+DASHBOARD_HEADER_HTML = '''
+    <div class="navbar navbar-static-top" >
+        <div class="navbar-inner">
+            <div class="container">
+                <a href="/home/" class="brand nav-link" style="text-shadow: none;">Twitter Happiness</a>
+                <ul class="nav">
+                    <li><a href="/tweets-list/" class="nav-link" style="text-shadow: none;">Tweets List</a></li>
+                    <li><a href="/tweets-map/" class="nav-link" style="text-shadow: none;">Tweets Map</a></li>
+                    <li><a href="/tweets-tl/" class="nav-link" style="text-shadow: none;">Tweets TL</a></li>
+                </ul>
+                <ul class="nav pull-right">
+                    <li><a href="/about-us/" class="nav-link" style="text-shadow: none;">About Us</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+'''
+
+
 @flask_app.route('/tweets-tl/')
 def tweets_tl():
     global dash_app
@@ -180,23 +201,7 @@ def tweets_tl():
     dash_app.layout = html.Div([
 
         html.Div([
-            dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
-                <div class="navbar navbar-static-top" >
-                    <div class="navbar-inner">
-                        <div class="container">
-                            <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
-                            <ul class="nav">
-                                <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
-                                <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
-                                <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
-                            </ul>
-                            <ul class="nav pull-right">
-                                <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            ''')
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML(DASHBOARD_HEADER_HTML)
         ]),
 
         html.Div([
@@ -336,27 +341,6 @@ def update_tweets_tl(location_filter, date_filter):
 
 
     return hist1
-
-
-# DASHBOARD COMPONENTS
-
-DASHBOARD_HEADER_HTML = '''
-    <div class="navbar navbar-static-top" >
-        <div class="navbar-inner">
-            <div class="container">
-                <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
-                <ul class="nav">
-                    <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
-                    <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
-                    <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
-                </ul>
-                <ul class="nav pull-right">
-                    <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-'''
 
 
 ICON_SIZE = 20
