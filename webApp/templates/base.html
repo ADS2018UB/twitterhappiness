@@ -9,6 +9,7 @@
         <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet">
         <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
         <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" type= "text/css" href= "/static/styles/home_page.css">
         {# Link any other .css or .js found in app static folder. #}
         <style>
         {# Add simple CSS style tweaks here. #}
@@ -26,14 +27,14 @@
         <div class="navbar navbar-static-top" >
             <div class="navbar-inner" style="background-image: none !important; background-color: rgb(29, 161, 242); !important; border: none !important">
                 <div class="container">
-                    <a href="{{ url_for('home_page') }}" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                    <a href="{{ url_for('home_page') }}" class="brand nav-link" style="text-shadow: none;">Twitter Happiness</a>
                     <ul class="nav">
-                        <li><a href="{{ url_for('tweets_list') }}" style="text-shadow: none;">Tweets List</a></li>
-                        <li><a href="{{ url_for('tweets_map') }}" style="text-shadow: none;">Tweets Map</a></li>
-                        <li><a href="{{ url_for('tweets_tl') }}" style="text-shadow: none;">Tweets TL</a></li>
+                        <li><a href="{{ url_for('tweets_list') }}" class="nav-link" style="text-shadow: none;">Tweets List</a></li>
+                        <li><a href="{{ url_for('tweets_map') }}" class="nav-link" style="text-shadow: none;">Tweets Map</a></li>
+                        <li><a href="{{ url_for('tweets_tl') }}" class="nav-link" style="text-shadow: none;">Tweets TL</a></li>
                     </ul>
                     <ul class="nav pull-right">
-                        <li><a href="{{ url_for('about_us') }}" style="text-shadow: none;">About Us</a></li>
+                        <li><a href="{{ url_for('about_us') }}" class="nav-link" style="text-shadow: none;">About Us</a></li>
                     </ul>
                 </div>
             </div>
