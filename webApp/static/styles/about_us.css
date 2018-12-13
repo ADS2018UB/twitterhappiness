@@ -8,18 +8,24 @@
     padding-bottom: 10px;
 }
 
-.about-us-container {
-    max-width: 100%;
-    margin: auto;
+.about-us-wrapper {
+    text-align: center;
+}
 
+.about-us-container {
+    display: inline-block;
+    margin-bottom: 50px;
 }
 
 .about-us-box {
-    width: 200px;
-    margin: 20px;
+    width: 100%;
+    max-width: 270px;
+    height: 270px;
+    overflow: hidden;
+    margin: 15px;
     display: inline-block;
     border: 1px solid rgb(153, 153, 153);
-    border-radius: 5px;
+    border-radius: 15px;
 }
 
 table {
@@ -29,4 +35,27 @@ table {
 td, th {
     text-align: center;
     padding: 8px;
+}
+
+.about-us-pic {
+    height: 150px
+}
+
+.about-us-name {
+    font-weight: bold;
+    /*height: 35px;*/
+}
+
+.about-us-icon {
+    height: 30px;
+    margin: 10px;
+}
+
+.about-us-icon-unavailable {
+    opacity: 0.5;
+}
+
+.icon-link:hover {
+    background-color: transparent !important;
+    color: transparent !important;
 }
