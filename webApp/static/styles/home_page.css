@@ -16,7 +16,7 @@ body {
     border: none !important
 }
 
-a:hover {
+.nav-link:hover {
     background-color: rgb(65, 176, 245) !important;
 }
 
