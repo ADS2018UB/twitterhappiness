@@ -33,9 +33,14 @@ def analyze(data):
 
     for elem in data:
         sentiment = TextBlob(elem["text"]).polarity
+        subjectivity = TextBlob(elem["text"]).subjectivity
         elem['sentiment'] = sentiment
         elem['class'] = decide_class(sentiment)
-        elem['subjectivity'] = sentiment.subjectivity
+        elem['subjectivity'] = subjectivity
+
+        date_str = elem['created_at']
+        date_obj = datetime.datetime.strptime(date_str, '%a %b %d %H:%M:%S %z %Y')
+        elem['datetime'] = datetime.datetime.combine(date_obj.date(), date_obj.time())
 
         # populate lat, lon fields
         if elem["coordinates"] is not None and elem["coordinates"]["type"] == "Point":

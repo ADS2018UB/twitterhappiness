@@ -4,7 +4,7 @@ import json
 
 
 
-TWITTER_CREDENTIALS_FILE = '../credentials/twitter_credentials.txt'
+TWITTER_CREDENTIALS_FILE = '..credentials/twitter_credentials.txt'
 
 def get_tweets(location, max_tweets):
 
