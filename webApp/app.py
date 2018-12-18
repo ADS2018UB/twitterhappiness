@@ -385,6 +385,18 @@ sentiment_class_colors = {
         2: "rgb(0, 255, 0)",
     }
 
+def decide_class_subjectivity(subjectivity):
+    if subjectivity <= 0.2:
+        return -2
+    if subjectivity < 0.4:
+        return -1
+    if subjectivity < 0.6:
+        return 0
+    if subjectivity < 0.8:
+        return 1
+    else:
+        return 2
+
 
 @flask_app.route('/tweets-map/')
 def tweets_map():
@@ -426,13 +438,13 @@ def tweets_map():
                             options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
                             value=location
                         ),
-                        ], style={'width': '50%', 'display': 'inline-block'}
+                        ], style={'width': '35%', 'display': 'inline-block'}
                     ),  # 'margin': 'auto'}),
 
                     html.Div([
                         dcc.RadioItems(
                             id='map-type',
-                            options=[{'label': ' '+i, 'value': i} for i in ['Circles', 'Icons', 'Heatmap']],
+                            options=[{'label': ' '+i, 'value': i} for i in ['Circles', 'Icons', 'Heatmap', 'Subjectivity']],
                             value='Circles',
                             labelStyle={'display': 'inline-block', 'margin-left': '10px', 'margin-right': '10px', 'word-spacing': '5px'}
                         )
@@ -440,6 +452,17 @@ def tweets_map():
 
                     )
                 ], style={'width': '80%', 'margin': 'auto'}),
+
+                html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+                html.Div([
+                    dcc.Textarea(
+                        id='hashtag-filter',
+                        placeholder='Enter a hashtag...',
+                        value='',
+                        style={'width': '100%', 'height': '30px'}
+                    )], style={'width': '70%', 'height': '30px', 'margin': 'auto'}
+                ),
 
                 html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
@@ -481,10 +504,13 @@ def tweets_map():
     dash.dependencies.Output('tweets-list', 'children'),
     [
         dash.dependencies.Input('locations-filter', 'value'),
+        dash.dependencies.Input('map-type', 'value'),
+        dash.dependencies.Input('hashtag-filter', 'value'),
         dash.dependencies.Input('date-slider', 'value'),
+
     ]
 )
-def update_tweets_list(location_filter, date_filter):
+def update_tweets_list(location_filter, map_type, hashtag_filter, date_filter):
 
     min_day = datetime.datetime.today().replace(hour=00, minute=00, second=00) + datetime.timedelta(days=date_filter[0])
     max_day = datetime.datetime.today().replace(hour=23, minute=59, second=59) + datetime.timedelta(days=date_filter[1])
@@ -493,7 +519,7 @@ def update_tweets_list(location_filter, date_filter):
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
     #print(location)
 
-    location_query = {
+    query = {
         "lat": {
             "$gte": location["lat_min"],
             "$lte": location["lat_max"]
@@ -507,15 +533,31 @@ def update_tweets_list(location_filter, date_filter):
             "$lte": max_day,
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)  # [:300]
 
-    #tweets_list = [tweet for tweet in tweets]
-    #html_content = '<div class="tweets-scrolling-box" > '
-    html_content = ''
-    for tweet in tweets:
-        # {white-space: pre-line;}
-        html_content += '<div id="' + tweet["id_str"] +'"class="tweet" style="background-color:' + sentiment_class_colors[tweet["class"]] + '";>' + tweet['text'] + "<br><i>" + datetime.datetime.strftime(tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>" + '</div>'
-    #html_content = ''.join([html_content, '</div>'])
+    if hashtag_filter != '':
+        query["entities.hashtags"] = {
+            "$elemMatch": {
+                "text": {
+                    "$regex": "^" + hashtag_filter + "$",
+                    "$options": "i"
+                }
+            }
+        }
+
+    tweets = MONGO.db[DB_TWEETS].find(query)  # [:300]
+
+    if map_type == 'Subjectivity':
+        html_content = ''
+        for tweet in tweets:
+            # {white-space: pre-line;}
+            html_content += '<div id="' + tweet["id_str"] +'"class="tweet" style="background-color:' + sentiment_class_colors[decide_class_subjectivity(tweet["subjectivity"])] + '";>' + tweet['text'] + "<br><i>" + datetime.datetime.strftime(tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>" + '</div>'
+        #html_content = ''.join([html_content, '</div>'])
+    else:
+        html_content = ''
+        for tweet in tweets:
+            # {white-space: pre-line;}
+            html_content += '<div id="' + tweet["id_str"] +'"class="tweet" style="background-color:' + sentiment_class_colors[tweet["class"]] + '";>' + tweet['text'] + "<br><i>" + datetime.datetime.strftime(tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>" + '</div>'
+        #html_content = ''.join([html_content, '</div>'])
 
     content = dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content)
     return content
@@ -526,10 +568,11 @@ def update_tweets_list(location_filter, date_filter):
     [
         dash.dependencies.Input('locations-filter', 'value'),
         dash.dependencies.Input('map-type', 'value'),
+        dash.dependencies.Input('hashtag-filter', 'value'),
         dash.dependencies.Input('date-slider', 'value')
     ]
 )
-def update_tweets_map(location_filter, map_type, date_filter):
+def update_tweets_map(location_filter, map_type, hashtag_filter, date_filter):
     root_url = request.url_root
 
     mapbox_access_token = 'pk.eyJ1IjoiZWR1cmYiLCJhIjoiY2pvOTg2NWFjMDd0MjN2b2pveXcxam1taCJ9.1vQR8y_zH5YsUkbJbdOjaw'
@@ -541,7 +584,7 @@ def update_tweets_map(location_filter, map_type, date_filter):
     location = MONGO.db[DB_LOCATIONS].find({"name": location_filter})[0]
     #print(location)
 
-    location_query = {
+    query = {
         "lat": {
             "$gte": location["lat_min"],
             "$lte": location["lat_max"]
@@ -555,7 +598,18 @@ def update_tweets_map(location_filter, map_type, date_filter):
             "$lte": max_day,
         }
     }
-    tweets = MONGO.db[DB_TWEETS].find(location_query)
+
+    if hashtag_filter != '':
+        query["entities.hashtags"] = {
+            "$elemMatch": {
+                "text": {
+                    "$regex": "^" + hashtag_filter + "$",
+                    "$options": "i"
+                }
+            }
+        }
+
+    tweets = MONGO.db[DB_TWEETS].find(query)
 
     if map_type == 'Circles':
         tweets_ids = []
@@ -611,6 +665,64 @@ def update_tweets_map(location_filter, map_type, date_filter):
         )
 
         return dcc.Graph(id="tweets-map-circle", figure=go.Figure(data=data, layout=layout))
+
+
+    if map_type == 'Subjectivity':
+        tweets_ids = []
+        tweets_lats = []
+        tweets_lons = []
+        tweets_texts = []
+        tweets_colors = []
+        for tweet in tweets:
+            tweets_ids.append(tweet["id_str"])
+            tweets_lats.append(tweet["lat"])
+            tweets_lons.append(tweet["lon"])
+            tweets_texts.append(
+                "<br>".join(textwrap.wrap(tweet["text"], 50)) + "<br><i>" + datetime.datetime.strftime(
+                    tweet['datetime'], "%d-%m-%Y %H:%M") + "</i>"
+            )
+            tweets_colors.append(sentiment_class_colors[decide_class_subjectivity(tweet["subjectivity"])])
+
+        data = [
+            go.Scattermapbox(
+                customdata=tweets_ids,
+                lat=tweets_lats,
+                lon=tweets_lons,
+                mode='markers',
+                marker=dict(
+                    # symbol="square",
+                    size=14,
+                    color=tweets_colors,
+                ),
+                text=tweets_texts,
+                hoverinfo='text'  # 'name + x + y + text',
+            )
+        ]
+
+        layout = go.Layout(
+            autosize=True,
+            height=600,
+            hovermode='closest',
+            mapbox=dict(
+                accesstoken=mapbox_access_token,
+                bearing=0,
+                center=dict(
+                    lat=location["lat_center"],
+                    lon=location["lon_center"]
+                ),
+                pitch=0,
+                zoom=10
+            ),
+            margin={
+                'l': 0,
+                'r': 0,
+                'b': 0,
+                't': 0
+            },
+        )
+
+        return dcc.Graph(id="tweets-map-circle", figure=go.Figure(data=data, layout=layout))
+
 
     if map_type == 'Icons':
         m = folium.Map(
