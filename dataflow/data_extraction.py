@@ -12,12 +12,17 @@ class DataExtraction:
     def collect(self, location, n=1000):
         print("Collecting data for", location["name"])
 
+        tweets = []
+
         places = self.twitter_api.reverse_geocode(
             lat=location['lat_center'],
             long=location['lon_center'],
             accuracy=location['radius'])
-        place_id = places[0].id
-        tweets = self.twitter_api.search(q="place:%s" % place_id, lang='en', count=n)
+
+        for i in range(0, len(places)):
+            place_id = places[i].id
+            tweets_by_place = self.twitter_api.search(q="place:%s" % place_id, lang='en', count=n)
+            tweets.extend(tweets_by_place)
 
         print("Tweets collected:", len(tweets))
 
