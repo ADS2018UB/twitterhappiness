@@ -8,9 +8,9 @@ DETAILS = [
         "github": "https://github.com/Neoares",
     },
     {
-        "picture": "dummy_pic.png",
-        "name": "Gerard Marrugat",
-        "email": "",
+        "picture": "gerard.jpg",
+        "name": "Gerard Marrugat Torregrosa",
+        "email": "gmarrugat@gmail.com",
         "linkedin": "https://www.linkedin.com/in/gerardmarrugat/",
         "github": "https://github.com/gmarrugat",
     },
@@ -37,7 +37,7 @@ DETAILS = [
     },
     {
         "picture": "eduard.jpeg",
-        "name": "Eduard Ribas",
+        "name": "Eduard Ribas Fernández",
         "email": "edu.ribas.92@gmail.com",
         "linkedin": "https://www.linkedin.com/in/eduardribasfernandez/",
         "github": "https://github.com/kterf",

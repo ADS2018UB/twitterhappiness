@@ -386,14 +386,10 @@ sentiment_class_colors = {
     }
 
 def decide_class_subjectivity(subjectivity):
-    if subjectivity <= 0.2:
+    if subjectivity <= 0.33:
         return -2
-    if subjectivity < 0.4:
-        return -1
-    if subjectivity < 0.6:
+    if subjectivity < 0.66:
         return 0
-    if subjectivity < 0.8:
-        return 1
     else:
         return 2
 
@@ -447,8 +443,7 @@ def tweets_map():
                             options=[{'label': ' '+i, 'value': i} for i in ['Circles', 'Icons', 'Heatmap', 'Subjectivity']],
                             value='Circles',
                             labelStyle={'display': 'inline-block', 'margin-left': '10px', 'margin-right': '10px', 'word-spacing': '5px'}
-                        )
-                        ], style={'margin-left': '10%', 'display': 'inline-block', 'vertical-align': 'top'}
+                        )], style={'margin-left': '10%', 'display': 'inline-block', 'vertical-align': 'top'}
 
                     )
                 ], style={'width': '80%', 'margin': 'auto'}),
