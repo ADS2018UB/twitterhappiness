@@ -24,8 +24,8 @@
     overflow: hidden;
     margin: 15px;
     display: inline-block;
-    border: 1px solid rgb(153, 153, 153);
-    border-radius: 15px;
+    /*border: 1px solid rgb(153, 153, 153);*/
+    /*border-radius: 15px;*/
 }
 
 table {

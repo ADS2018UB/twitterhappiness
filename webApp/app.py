@@ -427,37 +427,40 @@ def tweets_map():
             html.Div([
 
                 html.Div([
-
-                    html.Div([
-                        dcc.Dropdown(
-                            id='locations-filter',
-                            options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
-                            value=location
-                        ),
-                        ], style={'width': '35%', 'display': 'inline-block'}
-                    ),  # 'margin': 'auto'}),
-
-                    html.Div([
-                        dcc.RadioItems(
-                            id='map-type',
-                            options=[{'label': ' '+i, 'value': i} for i in ['Circles', 'Icons', 'Heatmap', 'Subjectivity']],
-                            value='Circles',
-                            labelStyle={'display': 'inline-block', 'margin-left': '10px', 'margin-right': '10px', 'word-spacing': '5px'}
-                        )], style={'margin-left': '10%', 'display': 'inline-block', 'vertical-align': 'top'}
-
-                    )
-                ], style={'width': '80%', 'margin': 'auto'}),
+                    dcc.Dropdown(
+                        id='locations-filter',
+                        options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
+                        value=location
+                    ),
+                ], style={'width': '50%', 'margin': 'auto'}
+                ),  # 'margin': 'auto'}),
 
                 html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 
                 html.Div([
-                    dcc.Textarea(
-                        id='hashtag-filter',
-                        placeholder='Enter a hashtag...',
-                        value='',
-                        style={'width': '100%', 'height': '30px'}
-                    )], style={'width': '70%', 'height': '30px', 'margin': 'auto'}
-                ),
+
+                    html.Div([
+                        dcc.Textarea(
+                            id='hashtag-filter',
+                            placeholder='Hashtag...',
+                            value='',
+                            style={'width': '100%', 'height': '30px'}
+                        )], style={'width': '40%', 'height': '30px', 'margin': 'auto', 'display': 'inline-block'}
+                    ),
+
+                    html.Div([
+                        dcc.RadioItems(
+                            id='map-type',
+                            options=[{'label': ' ' + i, 'value': i} for i in
+                                     ['Circles', 'Icons', 'Heatmap', 'Subjectivity']],
+                            value='Circles',
+                            labelStyle={'display': 'inline-block', 'margin-left': '10px', 'margin-right': '10px',
+                                        'word-spacing': '5px'}
+                        )], style={'margin-left': '20px', 'display': 'inline-block', 'vertical-align': 'top', 'float': 'right'}
+
+                    ),
+
+                ], style={'width': '80%', 'margin': 'auto'}),
 
                 html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
 

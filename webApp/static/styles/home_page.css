@@ -1,6 +1,6 @@
 
 body {
-  font: 16px Arial;
+  font: 16px Arial !important;
   background-image: url("/static/background/image2.jpg");
   /*background-position: center;*/
   background-size: cover;
