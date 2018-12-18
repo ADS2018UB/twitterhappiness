@@ -1,0 +1,61 @@
+
+.about-us-title {
+    color: rgb(29, 161, 242);
+    font-size: 60px;
+    text-align: center;
+    font-weight: bold;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.about-us-wrapper {
+    text-align: center;
+}
+
+.about-us-container {
+    display: inline-block;
+    margin-bottom: 50px;
+}
+
+.about-us-box {
+    width: 100%;
+    max-width: 270px;
+    height: 270px;
+    overflow: hidden;
+    margin: 15px;
+    display: inline-block;
+    border: 1px solid rgb(153, 153, 153);
+    border-radius: 15px;
+}
+
+table {
+    width: 100%;
+}
+
+td, th {
+    text-align: center;
+    padding: 8px;
+}
+
+.about-us-pic {
+    height: 150px
+}
+
+.about-us-name {
+    font-weight: bold;
+    /*height: 35px;*/
+}
+
+.about-us-icon {
+    height: 30px;
+    margin: 10px;
+}
+
+.about-us-icon-unavailable {
+    opacity: 0.2;
+}
+
+.icon-link:hover {
+    background-color: transparent !important;
+    color: transparent !important;
+}

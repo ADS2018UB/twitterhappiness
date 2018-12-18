@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}About Us{% endblock title %}
+
+{% block extra_head %}
+<link rel="stylesheet" type= "text/css" href= "/static/styles/about_us.css">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+{% endblock extra_head %}
+
+{% block main %}
+  <div class="about-us-title">
+    About us
+  </div>
+
+  <div class="about-us-wrapper">
+    <div class="about-us-container">
+      {% for detail in details %}
+      <div class="about-us-box">
+        <table>
+          <tr><td><img src={{"/static/pictures/" + detail["picture"]}} class="about-us-pic w3-circle w3-border"></td></tr>
+          <tr><td><div class="about-us-name">{{ detail["name"] }}</div></td></tr>
+          <tr><td>
+            {% if detail["email"] != "" %}
+              <a href={{"mailto:" + detail["email"]}}>
+                <img src="/static/pictures/email.png"  class="about-us-icon">
+              </a>
+            {% else %}
+              <img src="/static/pictures/email.png"  class="about-us-icon about-us-icon-unavailable">
+            {% endif %}
+
+            {% if detail["linkedin"] != "" %}
+              <a href={{detail["linkedin"]}}>
+                <img src="/static/pictures/linkedin.png"  class="about-us-icon">
+              </a>
+            {% else %}
+              <img src="/static/pictures/linkedin.png"  class="about-us-icon about-us-icon-unavailable">
+            {% endif %}
+
+            {% if detail["github"] != "" %}
+              <a href={{detail["github"]}}>
+                <img src="/static/pictures/github.svg"  class="about-us-icon">
+              </a>
+            {% else %}
+              <img src="/static/pictures/github.svg"  class="about-us-icon about-us-icon-unavailable">
+            {% endif %}
+          </td></tr>
+          <!--tr><td>{{ detail["linkedin"] }}</td></tr-->
+          <!--tr><td>{{ detail["github"] }}</td></tr-->
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+{% endblock main %}
