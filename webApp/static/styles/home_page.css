@@ -26,8 +26,17 @@ body {
     text-align: center;
     font-weight: bold;
     padding-top: 100px;
-    padding-bottom: 50px;
+    padding-bottom: 100px;
 }
+
+.homepage-text {
+    display: inline-block;
+    width:55%;
+    color: rgb(70,70,70);
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
 
 * {
   box-sizing: border-box;
