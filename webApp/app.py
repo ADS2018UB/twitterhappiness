@@ -30,6 +30,9 @@ from folium.plugins import HeatMap
 
 # ABOUT US IMPORTS
 import about_us_details
+import tweepy
+import datetime as dt
+from textblob import TextBlob
 
 # dash_app = dash.Dash(__name__)
 # flask_app = dash_app.server
@@ -54,6 +57,15 @@ DB_TWEETS = "tweets"
 DB_LOCATIONS = "twitter_happiness_locations"
 DB_UP = False
 
+TWITTER_CREDENTIALS_FILE = "../credentials/twitter_credentials.txt"
+
+with open(TWITTER_CREDENTIALS_FILE, 'r', encoding='utf-8') as f:
+    [access_key, access_secret, consumer_key, consumer_secret] = f.read().splitlines()
+
+#Authentication
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_key, access_secret)
+api = tweepy.API(auth)
 
 def db_connect():
     global DB_UP
@@ -90,6 +102,24 @@ flask_app.config['SESSION_PROTECTION'] = 'strong'
 
 filtered_location = None
 
+DASHBOARD_HEADER_HTML = '''
+    <div class="navbar navbar-static-top" >
+        <div class="navbar-inner">
+            <div class="container">
+                <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                <ul class="nav">
+                    <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
+                    <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
+                    <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
+                    <li><a href="/tweets-celebrity/" style="text-shadow: none;">Tweets Celebrity</a></li>
+                </ul>
+                <ul class="nav pull-right">
+                    <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+'''
 
 def dump_request_detail(request):
     request_detail = """
@@ -144,6 +174,10 @@ def home_page():
     locations = [location["name"] for location in MONGO.db[DB_LOCATIONS].find().sort("name")]
     return render_template('home/home_page.html', locations=locations)
 
+@flask_app.route('/tweets-celebrity/')
+def tweets_celebrity():
+    locations = [location["name"] for location in MONGO.db[DB_LOCATIONS].find().sort("name")]
+    return render_template('tweets/cel_page.html', locations=locations)
 
 @flask_app.route('/tweets-list/')
 def tweets_list():
@@ -243,6 +277,7 @@ def tweets_tl():
 
     return dash_app.index()
 
+
 def select_image(mean):
     if mean > 0.05:
         return 'static/icon_happy.png'
@@ -341,6 +376,290 @@ def update_tweets_tl(location_filter, date_filter):
 
 
     return hist1
+
+initial_img = 'https://i.guim.co.uk/img/media/acb1627786c251362c4bc87c1f53fa39b49d8d3d/0_0_1368_1026/master/1368.jpg?width=300&quality=85&auto=format&fit=max&s=257a6abd5fef974f53e7b81dd81937da'
+
+def celebrity_tracking(user_name, n): #n is the number of tweets to be retrieved,
+
+    user = api.get_user(screen_name = user_name)
+    juser = user._json
+    img_url = juser['profile_image_url']
+
+    query = "from:"+user_name+"/-filter:retweets"
+    tweets = api.search(q=query, count=n)
+    tweets_json = []
+    sentiments = []
+    for tweet in tweets:
+        tweets_json.append(tweet._json)
+        sentiment = TextBlob(tweet._json['text']).polarity
+        sentiments.append(sentiment)
+    return (img_url,tweets_json, sentiments)
+
+@flask_app.route('/tweets-user/')
+def tweets_user():
+    global dash_app
+
+    try:
+        user = request.args['User ID']
+    except:
+        pass
+
+    users = [ user,
+    '@justinbieber',
+    '@katyperry',
+	'@BarackObama',
+    '@rihanna',
+    '@ladygaga',
+	'@TheEllenShow',
+    '@jtimberlake',
+    '@ArianaGrande',
+    '@KimKardashian',
+    '@selenagomez',
+    '@ddlovato',
+    '@britneyspears',
+    '@realDonaldTrump',
+    ]
+
+    initial_img = 'https://i.guim.co.uk/img/media/acb1627786c251362c4bc87c1f53fa39b49d8d3d/0_0_1368_1026/master/1368.jpg?width=300&quality=85&auto=format&fit=max&s=257a6abd5fef974f53e7b81dd81937da'
+    dash_app.layout = html.Div([
+
+        html.Div([
+            dash_dangerously_set_inner_html.DangerouslySetInnerHTML(DASHBOARD_HEADER_HTML)
+        ]),
+
+        html.Div([
+
+        html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+        html.Div([
+            ## multi=True
+            html.Div([
+
+            html.Div([
+                dcc.Dropdown(
+                    id='user-filter',
+                    options=[{'label': user2, 'value': user2} for user2 in users ],
+                    value=user
+                )], style={'width': '50%', 'margin': 'auto'})]),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'})]),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                html.Div(style={'width': '15%', 'display': 'inline-block'}),
+                html.Div(
+                html.Img(id='img-user', src=initial_img, height='270', width='270'), style={ 'display': 'inline-block',  'vertical-align':'top'}),
+                html.Div(dcc.Graph(id='tweets-user-stats'), style={'width': '45%', 'display': 'inline-block'}),
+                html.Div(style={'width': '15%', 'display': 'inline-block'})
+                            ]),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '10px'}),
+
+            html.Div([
+                html.Div(style={'width': '15%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(id='tweets-user'), style={'width': '45%', 'display': 'inline-block'}),
+                html.Div(style={'width': '3%', 'display': 'inline-block'}),
+                html.Div(id='tweets-list2', style={'width': '25%', 'display': 'inline-block', 'vertical-align':'top', 'overflow':'auto', 'max-height': '440px'}),
+                html.Div(style={'width': '15%', 'display': 'inline-block'})
+            ]),
+
+            html.Div(style={'padding-top': '10px', 'padding-bottom': '150px'}),
+        ],
+            style={'width': '80%', 'margin': 'auto'}
+        )
+
+    ])
+
+    return dash_app.index()
+
+@dash_app.callback(
+    dash.dependencies.Output('tweets-user', 'figure'),
+    [dash.dependencies.Input('user-filter', 'value')]
+)
+def update_tweets_user(user_filter):
+    root_url = request.url_root
+
+    try:
+        profile_img_url, tweets, sentiments = celebrity_tracking(user_filter, 30)
+
+    except:
+         pass
+
+    y = [0.01,0.01,0.01,0.01,0.01]
+
+
+    try:
+        mean = sum(sentiments)/len(sentiments)
+        for elem in sentiments:
+            if elem > 0.5:
+                y[4] += 1
+            elif elem > 0.05:
+                y[3] += 1
+            elif elem > -0.05:
+                y[2] += 1
+            elif elem > -0.5:
+                y[1] += 1
+            else: y[0] += 1
+
+    except:
+        mean = 0
+
+    print(y)
+    data = [
+
+    go.Histogram(
+    y = y,
+    histfunc = "sum",
+    x = ['Very Negative',  'Negative', 'Neutral',
+     'Positive','Very Positive'],
+
+     histnorm='probability',
+     marker=dict(
+        color=['rgba(219, 29, 0,1)', 'rgba(255, 96, 61,1)',
+               'rgba(245,255,20,1)', 'rgba(86, 244, 66,1)',
+               'rgba(4, 160, 4,1)'])
+    )
+    ]
+
+
+    layout = go.Layout(
+
+
+    yaxis=dict(
+        title='% of tweets'
+    ),
+    bargap=0.2,
+    bargroupgap=0.1,
+    images=[dict(
+        source=root_url+select_image(mean),
+        xref="paper", yref="paper",
+        x=0.5, y=1.1,
+        sizex=0.25, sizey=0.25,
+        xanchor="center", yanchor="bottom"
+      )]
+    )
+    # we add a scatter trace with data points in opposite corners to give the Autoscale feature a reference point
+
+
+
+    hist1 = dict(data=data, layout=layout)
+
+
+    return hist1
+# DASHBOARD COMPONENTS
+def transform_str(nb):
+    if nb > 1000000:
+
+        str_nb = str(nb)[:-5]
+        if str_nb[-1] == '0': return str_nb[0:-1]+' M'
+        else: return str_nb[0:-1]+',' + str_nb[-1] + ' M'
+
+    elif nb > 1000:
+
+        str_nb = str(nb)[:-2]
+        if str_nb[-1] == '0': return str_nb[0:-1]+' k'
+        else: return str_nb[0:-1]+',' + str_nb[-1] + ' k'
+
+    else:
+        return nb
+
+@dash_app.callback(
+    dash.dependencies.Output('tweets-user-stats', 'figure'),
+    [dash.dependencies.Input('user-filter', 'value')]
+)
+def update_stats_user(user_filter):
+    root_url = request.url_root
+
+    try:
+        user = api.get_user(screen_name = user_filter)
+        tweet_count = transform_str(user.statuses_count)
+        follower_count = transform_str(user.followers_count)
+        following_count = transform_str(user.friends_count)
+    except:
+         tweet_count = 0
+         follower_count = 0
+         following_count = 0
+
+    trace = go.Table(
+    columnorder = [1,2,3],
+    columnwidth = [1000,1000, 1000],
+    header=dict(values=['Tweets', 'Followers', 'Following'],
+                line = dict(color='#609dff'),
+                fill = dict(color='#609dff'),
+                align = ['center'], height=40,
+               font = dict(color = 'black', size = 21)),
+    cells=dict(values=[[tweet_count, ''],
+                       [follower_count],
+                          [following_count]],
+               line = dict(color='#609dff'),
+               fill = dict(color='#609dff'),
+               align = ['center'],
+              font = dict(color = 'white', size = 30),
+                    height=35))
+
+    layout = dict(width=700, height=270 ,paper_bgcolor='rgba(96, 157, 255, 1)',
+    plot_bgcolor='rgba(96, 157, 255, 1)')
+    data=[trace]
+    table1 = dict(data=data, layout=layout)
+
+    return table1
+
+@dash_app.callback(
+    dash.dependencies.Output('img-user', 'src'),
+    [dash.dependencies.Input('user-filter', 'value')]
+)
+def update_img_user(user_filter):
+    root_url = request.url_root
+
+    try:
+        #user = api.get_user(screen_name = user_filter)
+        #juser = user._json
+        #img_url = juser['profile_image_url']
+        img_url = 'http://avatars.io/twitter/'+user_filter[1:]
+    except:
+         img_url = initial_img
+
+    print(img_url)
+    return img_url
+
+def select_class(sentim):
+    if sentim > 0.5:
+        return 2
+    elif sentim > 0.05:
+        return 1
+    elif sentim > -0.05:
+        return 0
+    elif sentim > -0.5:
+        return -1
+    else: return -2
+
+
+@dash_app.callback(
+    dash.dependencies.Output('tweets-list2', 'children'),
+    [
+        dash.dependencies.Input('user-filter', 'value')
+    ]
+)
+def update_tweets_list2(user_filter):
+
+    try:
+        profile_img_url, tweets, sentiments = celebrity_tracking(user_filter, 30)
+
+    except:
+         pass
+
+    #tweets_list = [tweet for tweet in tweets]
+    #html_content = '<div class="tweets-scrolling-box" > '
+    html_content = ''
+    for kk, tweet in enumerate(tweets):
+        tweet['class'] = select_class(sentiments[kk])
+        html_content += '<div id="' + tweet["id_str"] +'"class="tweet" style="background-color:' + sentiment_class_colors[tweet["class"]] + '";>' + tweet['text'] + "<br><i>"  + "</i>" + '</div>'
+    #html_content = ''.join([html_content, '</div>'])
+
+    content = dash_dangerously_set_inner_html.DangerouslySetInnerHTML(html_content)
+    return content
+
 
 
 ICON_SIZE = 20
