@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Home Page{% endblock title %}
+
+{% block extra_head %}
+<link rel="stylesheet" type= "text/css" href= "/static/styles/home_page.css">
+
+{% endblock extra_head %}
+
+{% block main %}
+  <div class="homepage-title">
+    Twitter Celebrity
+  </div>
+
+  <!--div>
+    <div align="center">
+      <img src="/static/twitter_sad.png" style="height: 150px">
+      <img src="/static/twitter_neutral.png" style="height: 150px">
+      <img src="/static/twitter_happy.png" style="height: 150px">
+    </div>
+  </div-->
+
+  <div align="center" >
+    <form autocomplete="off" action="/tweets-user/">
+    <div class="autocomplete" style="width:50%;">
+      <input id="myInput" type="text" name="User ID" placeholder="User ID" style="padding: 20px; margin-bottom: 0px !important;">
+    </div>
+    <input type="submit">
+  </form>
+  </div>
+
+
+  <script>
+
+    function addActive(x) {
+      /*a function to classify an item as "active":*/
+      if (!x) return false;
+      /*start by removing the "active" class on all items:*/
+      removeActive(x);
+      if (currentFocus >= x.length) currentFocus = 0;
+      if (currentFocus < 0) currentFocus = (x.length - 1);
+      /*add class "autocomplete-active":*/
+      x[currentFocus].classList.add("autocomplete-active");
+    }
+    function removeActive(x) {
+      /*a function to remove the "active" class from all autocomplete items:*/
+      for (var i = 0; i < x.length; i++) {
+        x[i].classList.remove("autocomplete-active");
+      }
+    }
+    function closeAllLists(elmnt) {
+      /*close all autocomplete lists in the document,
+      except the one passed as an argument:*/
+      var x = document.getElementsByClassName("autocomplete-items");
+      for (var i = 0; i < x.length; i++) {
+        if (elmnt != x[i] && elmnt != inp) {
+          x[i].parentNode.removeChild(x[i]);
+        }
+      }
+    }
+    /*execute a function when someone clicks in the document:*/
+    document.addEventListener("click", function (e) {
+        closeAllLists(e.target);
+    });
+  }
+
+  /*An array containing all the country names in the world:*/
+  var locations = [
+    {% for location in locations %}
+      "{{ location }}",
+    {% endfor %}
+  ]
+
+  /*initiate the autocomplete function on the "myInput" element, and pass along the countries array as possible autocomplete values:*/
+  autocomplete(document.getElementById("myInput"), locations);
+  </script>
+
+{% endblock main %}
