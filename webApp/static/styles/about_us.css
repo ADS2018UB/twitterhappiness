@@ -19,7 +19,7 @@
 
 .about-us-box {
     width: 100%;
-    max-width: 270px;
+    max-width: 200px;
     height: 270px;
     overflow: hidden;
     margin: 15px;
@@ -43,7 +43,7 @@ td, th {
 
 .about-us-name {
     font-weight: bold;
-    /*height: 35px;*/
+    height: 35px;
 }
 
 .about-us-icon {

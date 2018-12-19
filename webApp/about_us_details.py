@@ -22,11 +22,11 @@ DETAILS = [
         "github": "https://github.com/andreu15",
     },
     {
-        "picture": "dummy_pic.png",
+        "picture": "toni.jpg",
         "name": "Toni Miranda",
-        "email": "",
-        "linkedin": "",
-        "github": "",
+        "email": "tmiranda@utexas.edu",
+        "linkedin": "https://www.linkedin.com/in/tonimiranda",
+        "github": "https://github.com/tmiranda101",
     },
     {
         "picture": "emil.jpg",
