@@ -436,6 +436,8 @@ def tweets_user():
         pass
 
     users = [ user,
+	    '@nytimes',
+	     '@washingtonpost',
     '@justinbieber',
     '@katyperry',
 	'@BarackObama',
@@ -448,7 +450,7 @@ def tweets_user():
     '@selenagomez',
     '@ddlovato',
     '@britneyspears',
-    '@realDonaldTrump',
+    '@realDonaldTrump'
     ]
 
     initial_img = 'https://i.guim.co.uk/img/media/acb1627786c251362c4bc87c1f53fa39b49d8d3d/0_0_1368_1026/master/1368.jpg?width=300&quality=85&auto=format&fit=max&s=257a6abd5fef974f53e7b81dd81937da'
