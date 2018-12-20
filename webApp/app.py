@@ -105,15 +105,15 @@ DASHBOARD_HEADER_HTML = '''
     <div class="navbar navbar-static-top" >
         <div class="navbar-inner">
             <div class="container">
-                <a href="/home/" class="brand" style="text-shadow: none;">Twitter Happiness</a>
+                <a href="/home/" class="brand nav-link" style="text-shadow: none;">Twitter Happiness</a>
                 <ul class="nav">
-                    <li><a href="/tweets-list/" style="text-shadow: none;">Tweets List</a></li>
-                    <li><a href="/tweets-map/" style="text-shadow: none;">Tweets Map</a></li>
-                    <li><a href="/tweets-tl/" style="text-shadow: none;">Tweets TL</a></li>
-                    <li><a href="/tweets-celebrity/" style="text-shadow: none;">Tweets Celebrity</a></li>
+                    <li><a href="/tweets-list/" class="nav-link" style="text-shadow: none;">Tweets List</a></li>
+                    <li><a href="/tweets-map/" class="nav-link" style="text-shadow: none;">Tweets Map</a></li>
+                    <li><a href="/tweets-tl/" class="nav-link" style="text-shadow: none;">Tweets TL</a></li>
+                    <li><a href="/tweets-celebrity/" class="nav-link" style="text-shadow: none;">Tweets Celebrity</a></li>
                 </ul>
                 <ul class="nav pull-right">
-                    <li><a href="/about-us/" style="text-shadow: none;">About Us</a></li>
+                    <li><a href="/about-us/" class="nav-link" style="text-shadow: none;">About Us</a></li>
                 </ul>
             </div>
         </div>
@@ -275,7 +275,7 @@ def tweets_tl():
             ## multi=True
             html.Div([
                 dcc.Dropdown(
-                    id='locations-filter',
+                    id='locations-filter-tl',
                     options=[{'label': loc["name"], 'value': loc["name"]} for loc in locations],
                     value=location
                 )], style={'width': '50%', 'margin': 'auto'}),
@@ -284,7 +284,7 @@ def tweets_tl():
 
             html.Div([
                 dcc.RangeSlider(
-                    id='date-slider',
+                    id='date-slider-tl',
                     min=-days_history,
                     max=0,
                     marks=days_markers,
@@ -320,8 +320,8 @@ def select_image(mean):
 @dash_app.callback(
     dash.dependencies.Output('tweets-tl', 'figure'),
     [
-        dash.dependencies.Input('locations-filter', 'value'),
-        dash.dependencies.Input('date-slider', 'value')
+        dash.dependencies.Input('locations-filter-tl', 'value'),
+        dash.dependencies.Input('date-slider-tl', 'value')
     ]
 )
 def update_tweets_tl(location_filter, date_filter):
