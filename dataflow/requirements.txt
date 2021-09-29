@@ -6,7 +6,7 @@ geopy==1.17.0
 idna==2.7
 kiwisolver==1.0.1
 matplotlib==3.0.2
-nltk==3.4
+nltk==3.6.3
 numpy==1.15.4
 oauthlib==2.1.0
 pandas==0.23.4
